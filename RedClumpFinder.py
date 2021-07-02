@@ -29,111 +29,31 @@ class redclumpfinder():
         self.Iterations=Iterations
         return 
 
-    def fitRCnewnew(self,func,plotfit=False):
-        self.modelMag = lmfit.Model(func)
-        #first pass will always be run. We will make guess first for the RC magnitude
-        fitinds = self.cmd.fitMagHist != 0
-        yvals = self.cmd.fitMagHist[fitinds]
-        xvals = ((self.cmd.magBins[1:]+self.cmd.magBins[:-1])/2)[fitinds]
-        #self.fit = self.modelMag.fit(yvals,M=xvals,A=1,B=1,c=1,N_RC = yvals.max(), M_RC = xvals[yvals.argmax()],sigma_RC=.5)
-        #self.fit = self.modelMag.fit(yvals,M=xvals,A=13,B=1,N_RC = yvals.max(), M_RC = xvals[yvals.argmax()],sigma_RC=.5)
-        self.fit = self.modelMag.fit(yvals,M=xvals,A=13,B=1,N_RC = yvals.max(), M_RC = xvals[yvals.argmax()],sigma_RC=.5)
-        M=xvals
-        A=13
-        B=1
-        N_RC = yvals.max()
-        M_RC = xvals[yvals.argmax()]
-        sigma_RC=.5
-
-        #find maximum in color histogram, play with binsizes? 
-        colorbins = np.linspace(np.percentile(self.cmd.filterStarDict['delta'],5),np.percentile(self.cmd.filterStarDict['delta'],95),50)
-        bin_centers = (colorbins[:1]+colorbins[:-1])/2.
-        colorhist,colorbins = np.histogram(self.cmd.filterStarDict['delta'],colorbins)
-        
-        ColorRCInput = bin_centers[colorhist.argmax()]
-        
-        fit_iter=0
-        guess_list = []
-        ipdb.set_trace()
-        while fit_iter<5:
-            guess_list.append([ColorRCInput,M_RC])
-            #first fit the K-magnitude from initiail guess, see above
-            self.fit = self.modelMag.fit(yvals,M=xvals,A=A,B=B,N_RC=N_RC,M_RC=M_RC,sigma_RC=sigma_RC)
-            #calculate the weights
-            b_vals = self.fit.best_values
-            
-            self.calcWeights(b_vals['A'],b_vals['B'],b_vals['M_RC'],b_vals['sigma_RC'],b_vals['N_RC'])
-            #then use result to fit for colors
-            MagRC = self.fit.best_values['M_RC']
-            #ipdb.set_trace()
-            ColorRC = self.determineColor(ColorRCInput)
-            #now compare determined color and magnitude to the previous initial guess
-            #COMPARE
-
-            if ((np.abs(ColorRC - ColorRCInput) <= 0.03) and (np.abs(MagRC - M_RC) <= 0.03 )):
-                #set final values
-                print('FINISHED ITERS')
-                ipdb.set_trace()
-                break
-            else:
-                print("Restarting!\n")
-                #Use the last fits values as the newest initial guesses
-                A = self.fit.best_values['A']
-                B = self.fit.best_values['B']
-                M_RC = self.fit.best_values['M_RC']
-                sigma_RC = self.fit.best_values['sigma_RC']
-                N_RC = self.fit.best_values['N_RC']
-                ColorRCInput = ColorRC
-                fit_iter+=1
-            #IF PASS RETURN PARAMETERS
-            #ELSE SET NEWEST FIT PARAMETERS TO ITERATE OVER AGAIN
-
-                
-        
-        if plotfit:
-            guesses = np.array(guess_list)
-            self.cmd.plotCMD()
-            plt.plot(guesses[:,0],guesses[:,1],'C3o')
-            plt.show()
-        ipdb.set_trace()
-            
-
-
-
     def fitRCnew(self,func,plotfit=False,A=None,B=None,N_RC=None,M_RC=None,sigma_RC=None):
-        #while loop
+
         #first, find magnitude of RC
         self.fitRCMagnitude(func,plotfit=plotfit,A=A,B=B,N_RC=N_RC,M_RC=M_RC,sigma_RC=sigma_RC)
-        #ipdb.set_trace()
+
         A = self.fit.best_values['A']
         B = self.fit.best_values['B']
         M_RC = self.fit.best_values['M_RC']
         sigma_RC = self.fit.best_values['sigma_RC']
         N_RC = self.fit.best_values['N_RC']
+
         #Next, calculate the weights using this best fit
         self.calcWeights(A,B,M_RC,sigma_RC,N_RC)
+
         #then, try and determine color
         #bin colors for initial guess
         colorbins = np.linspace(np.percentile(self.cmd.filterStarDict['delta'],5),np.percentile(self.cmd.filterStarDict['delta'],95),50)
         bin_centers = (colorbins[1:]+colorbins[:-1])/2.
         colorhist,colorbins = np.histogram(self.cmd.filterStarDict['delta'],colorbins)
-        #ipdb.set_trace()
-        #plt.hist(self.cmd.filterStarDict['delta'],colorbins)
-        #plt.axvline(bin_centers[colorhist.argmax()],linestyle='--')
-        #plt.axvline(np.percentile(self.cmd.filterStarDict['delta'],5))
-        #plt.axvline(np.percentile(self.cmd.filterStarDict['delta'],95))
-        #print(bin_centers[colorhist.argmax()])
-        #plt.show()
-        #ipdb.set_trace()
         color_fit_vals = self.determineColor(bin_centers[colorhist.argmax()])
-        #then, check convergence and repeat if necessary
-    
         
         return color_fit_vals
 
 
     def determineColor(self,ColorRCinput):
-        #ipdb.set_trace()
         fitMags = []
         fitHMK = []
 
@@ -312,55 +232,43 @@ class redclumpfinder():
         #star dict is a dictionary of quality filtered stars
         return
 
-
-    #def fitRCMagnitude(self,func,plotfit=True):
-
-
-    #    self.modelMag = lmfit.Model(func)
-    #    fitinds = self.cmd.fitMagHist != 0
-    #    yvals = self.cmd.fitMagHist[fitinds]
-    #    xvals = ((self.cmd.magBins[1:]+self.cmd.magBins[:-1])/2)[fitinds]
-    #    M_RC_guess = xvals[yvals[np.where(xvals<14.5)[0]].argmax()]
-
-        #set up params
-    #    params = self.modelMag.make_params(A=4,B=.8,N_RC=yvals.max(),M_RC = M_RC_guess,sigma_RC=.5)
-        
-        #specific limits on the params we want
-
     def icMethod(self,method='mag',numbins=None):
-        #ipdb.set_trace()
+        
+        #Calculates the initial conditions for the fitting algorithm
         l = self.cmd.l
         b = self.cmd.b
+
+        #Mag method uses the magnitude and data as IC
         if method=='mag':
-            #ipdb.set_trace()
-            #bins = np.linspace(11,18,80)
-            #automating the bin sizes/number of bins
-            #numbins = 40+20*int(self.edge_length*60) -30
             if type(numbins)==type(None):
-                numbins = max([20,int(5*np.log(len(self.cmd.fitStarDict['altmag'])))]) #finds number of bins with a minimum of 40
+                numbins = max([20,int(5*np.log(len(self.cmd.fitStarDict['altmag'])))]) #finds number of bins with a minimum of 20
             bins = np.linspace(11,18,numbins)
 
-            val,mbin = np.histogram(self.cmd.fitStarDict['altmag'],bins) #altmag or mag? saw alt was used earlier but altname isnt used above
+            val,mbin = np.histogram(self.cmd.fitStarDict['altmag'],bins)
             fitinds = val != 0
             yvals = val[fitinds]
             xvals = ((mbin[1:]+mbin[:-1])/2)[fitinds]
 
-            #fiveavg = sum(rcfinder.cmd.fitStarDict['altmag'][0:5])/5 #average of first 5 magnitudes to use as background
             if l > 350:
                 l-=360
-            #Using location to aid initial guesses: order here goes yellow, purple, blue (from observation)
+            #Using location to aid initial guesses: order here goes outer, inner, midrange (from observation)
+
+            #Outskirts
             if abs(b)>0.9:
                 peaks = find_peaks(yvals[np.where(xvals<15)[0]],height=15,width=[8,18])
                 if peaks[0].size==0:
                     M_RCguess=13
                 else:
                     M_RCguess = xvals[peaks[0][0]]
+
+            #most extinct area close to GC
             elif abs(b) < 0.65 and l < 1.5:
                 peaks = find_peaks(yvals,height=70,distance=50)
                 if peaks[0].size==0:
                     M_RCguess=15
                 else:
                     M_RCguess = xvals[peaks[0][0]]
+            #Area in between center and outskirts
             else:
                 peaks = find_peaks(yvals,height=70,distance=10)
                 if peaks[0].size==0:
@@ -372,13 +280,12 @@ class redclumpfinder():
         return M_RCguess
 
     def fitRCMagnitude(self,func,plotfit=False,figdir='../misc_figs/maghist2.pdf',A=None,B=None,N_RC=None,M_RC=None,sigma_RC=None,pixID=None):
-        #ipdb.set_trace()
+        
         self.modelMag = lmfit.Model(func)
         fitinds = self.cmd.fitMagHist != 0
         yvals = self.cmd.fitMagHist[fitinds]
         xvals = ((self.cmd.magBins[1:]+self.cmd.magBins[:-1])/2)[fitinds]
 
-#        fiveavg = sum(self.cmd.fitStarDict['altmag'][0:5])/5
         #M_RC = self.icMethod()
         #default guesses from average map parameters
         if type(A)==type(None) or np.isnan(A):# or A<0.2:
@@ -403,24 +310,9 @@ class redclumpfinder():
         params['sigma_RC'].min=0
         #params['sigma_RC'].min=.3
 
-        #ipdb.set_trace()
-        #self.fit = self.modelMag.fit(yvals,M=xvals,A=1,B=1,c=1,N_RC = yvals.max(), M_RC = xvals[yvals.argmax()],sigma_RC=.5)
-        #self.fit = self.modelMag.fit(yvals,M=xvals,A=13,B=1,N_RC = yvals.max(), M_RC = xvals[yvals.argmax()],sigma_RC=.5)
+
         self.fit = self.modelMag.fit(yvals,params,M=xvals)#,weights=1/(yvals))
-        #ipdb.set_trace()
-        #self.fit.eval_uncertainty(M=xvals)
-        #if self.fit.best_values['M_RC']>15.5:
-        #    plotfit=True
-        #    ipdb.set_trace()
-        #print('Red Chi: '+str(self.fit.redchi))
-        #ipdb.set_trace()
-        #c = coord.SkyCoord(ra=self.cmd.ra*u.degree,dec=(self.cmd.dec)*u.degree ,frame='icrs')
-        #ipdb.set_trace()
-        #if self.fit.best_values['M_RC']>13.5 and c.galactic.b.degree<-2:
-        #    print(str(self.cmd.ra)+','+str(self.cmd.dec))
-        #    plotfit=True
-        
-        
+
         if plotfit:
             fig, ax = plt.subplots()
 
