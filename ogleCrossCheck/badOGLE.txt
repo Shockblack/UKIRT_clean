@@ -1,0 +1,33 @@
+2016-BLG-1020      | duplicate of 2016-BLG-0980
+2016-BLG-0600      | duplicate of 2016-BLG-0554
+2016-BLG-1091      | duplicate of 2016-BLG-1086
+2016-BLG-0575      | duplicate of 2016-BLG-0547
+2016-BLG-1342      | duplicate of 2016-BLG-1357   very interesting! 2 mag diff. dropping the brighter/blended one
+2016-BLG-1499      | duplicate of 2016-BLG-1643
+2016-BLG-1274      | duplicate of 2016-BLG-1211
+2016-BLG-1208      | duplicate of 2016-BLG-1218   another in same field, but now one is 'N'=new event. again, fainter offset guy is better photometry
+2016-BLG-1197      | duplicate of 2016-BLG-1395
+2016-BLG-0627      | duplicate of 2016-BLG-0626   triple in two fields. one is an 'N'
+2016-BLG-0594      | duplicate of 2016-BLG-0626  (other part of triple)
+2016-BLG-1361      | duplicate of 2016-BLG-1349  same field. dropping the much brighter blend
+2016-BLG-1615      | duplicate of 2016-BLG-1625  same field. keeping the dimmer 'N'
+2016-BLG-0639      | duplicate of 2016-BLG-0602    strange. same field. keeping dimmer one
+2016-BLG-1391      | duplicate of 2016-BLG-1376  also same field. again keeping the one with lower baseline
+2016-BLG-0789      | duplicate of 2016-BLG-0771
+2016-BLG-1632      | duplicate of 2016-BLG-1667  same field. both similar;both good. keeping the 'N' 
+2016-BLG-1913      | duplicate of 2016-BLG-1914
+2016-BLG-0131      | duplicate of 2016-BLG-0061  two fields. one is much better coverage
+2016-BLG-1282      | duplicate of 2016-BLG-1329  both look good. keep the N
+2016-BLG-1495      | duplicate of 2016-BLG-1591  both look good. keep the N
+2016-BLG-1358      | duplicate of 2016-BLG-1352
+2017-BLG-0636      | duplicate of 2017-BLG-0637  same field; keeping less blended one
+2017-BLG-0266      | duplicate of 2017-BLG-0222  same field; keep dimmer one ig
+actually no, these are not co-located | 2017-BLG-0351, 2017-BLG-0928
+2015-BLG-0633      | duplicate of 2015-BLG-0555
+x2018-BLG-1695      | looks like junk.  check it later (peaks after 2018 ukirt)
+2018-BLG-1602      | total junk.  why ogle?
+x2018-BLG-1318      | looks like junk.  check it later (peaks after 2018 ukirt)
+2018-BLG-1183      | looks like junk.  ogle u0=2.31  why?
+2018-BLG-1158      | CV? sharp rise but then some wackiness before going flat again
+2018-BLG-      | 
+2018-BLG-      | 

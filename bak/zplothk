@@ -1,0 +1,516 @@
+# of OGLE-UKIRT crossmatches 2017 1174
+NOTE: OGLE event with good delta-chi2, but not by-eye UK2017_s6_4_4_H_C22403
+NOTE: OGLE event with good delta-chi2, but not by-eye UK2017_n4_1_2_H_C5588
+NOTE: OGLE event with good delta-chi2, but not by-eye UK2017_s3_1_2_H_C64517
+NOTE: OGLE event with good delta-chi2, but not by-eye UK2017_s6_4_3_H_C31990
+# of OGLE events plotted: 30
+# of VVV events 182
+# of UKIRT events plotted: 158
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_n1_1_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n1_1_1.txt
+  Ndata, Ndrop: 76023 13124
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n1_1_2.txt
+  Ndata, Ndrop: 73716 13606
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n1_1_3.txt
+  Ndata, Ndrop: 73819 15196
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n1_1_4.txt
+  Ndata, Ndrop: 75310 14703
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_n1_2_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n1_2_1.txt
+  Ndata, Ndrop: 76682 13699
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n1_2_2.txt
+  Ndata, Ndrop: 74234 13590
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n1_2_3.txt
+  Ndata, Ndrop: 74675 15450
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n1_2_4.txt
+  Ndata, Ndrop: 74256 14934
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_n1_3_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n1_3_1.txt
+  Ndata, Ndrop: 85782 20506
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n1_3_2.txt
+  Ndata, Ndrop: 80162 16744
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n1_3_3.txt
+  Ndata, Ndrop: 75915 15644
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n1_3_4.txt
+  Ndata, Ndrop: 82241 19034
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_n1_4_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n1_4_1.txt
+  Ndata, Ndrop: 76672 14100
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n1_4_2.txt
+  Ndata, Ndrop: 73801 14447
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n1_4_3.txt
+  Ndata, Ndrop: 74502 15805
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n1_4_4.txt
+  Ndata, Ndrop: 75585 16009
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_n2_1_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n2_1_1.txt
+  Ndata, Ndrop: 77439 11725
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n2_1_2.txt
+  Ndata, Ndrop: 75165 11749
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n2_1_3.txt
+  Ndata, Ndrop: 75820 13096
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n2_1_4.txt
+  Ndata, Ndrop: 76037 13626
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_n2_2_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n2_2_1.txt
+  Ndata, Ndrop: 75781 11207
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n2_2_2.txt
+  Ndata, Ndrop: 73931 11789
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n2_2_3.txt
+  Ndata, Ndrop: 73265 13376
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n2_2_4.txt
+  Ndata, Ndrop: 73903 13292
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_n2_3_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n2_3_1.txt
+  Ndata, Ndrop: 80776 13623
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n2_3_2.txt
+  Ndata, Ndrop: 79887 14622
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n2_3_3.txt
+  Ndata, Ndrop: 77680 14344
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n2_3_4.txt
+  Ndata, Ndrop: 80345 16398
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_n2_4_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n2_4_1.txt
+  Ndata, Ndrop: 76466 13031
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n2_4_2.txt
+  Ndata, Ndrop: 73754 13188
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n2_4_3.txt
+  Ndata, Ndrop: 74748 14900
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n2_4_4.txt
+  Ndata, Ndrop: 75821 14585
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_n3_1_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n3_1_1.txt
+  Ndata, Ndrop: 78248 7310
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n3_1_2.txt
+  Ndata, Ndrop: 76003 7305
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n3_1_3.txt
+  Ndata, Ndrop: 76376 8787
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n3_1_4.txt
+  Ndata, Ndrop: 75671 9483
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_n3_2_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n3_2_1.txt
+  Ndata, Ndrop: 79524 6547
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n3_2_2.txt
+  Ndata, Ndrop: 77278 7210
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n3_2_3.txt
+  Ndata, Ndrop: 77258 8149
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n3_2_4.txt
+  Ndata, Ndrop: 77237 9074
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_n3_3_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n3_3_1.txt
+  Ndata, Ndrop: 76724 6913
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n3_3_2.txt
+  Ndata, Ndrop: 75460 7071
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n3_3_3.txt
+  Ndata, Ndrop: 76508 8673
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n3_3_4.txt
+  Ndata, Ndrop: 75689 9232
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_n3_4_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n3_4_1.txt
+  Ndata, Ndrop: 75487 7258
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n3_4_2.txt
+  Ndata, Ndrop: 73619 7137
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n3_4_3.txt
+  Ndata, Ndrop: 75287 9277
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n3_4_4.txt
+  Ndata, Ndrop: 73820 8958
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_n4_1_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n4_1_1.txt
+  Ndata, Ndrop: 77721 6904
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n4_1_2.txt
+  Ndata, Ndrop: 75084 7567
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n4_1_3.txt
+  Ndata, Ndrop: 75722 8614
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n4_1_4.txt
+  Ndata, Ndrop: 75816 9722
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_n4_2_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n4_2_1.txt
+  Ndata, Ndrop: 77472 7812
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n4_2_2.txt
+  Ndata, Ndrop: 75874 7834
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n4_2_3.txt
+  Ndata, Ndrop: 76876 9546
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n4_2_4.txt
+  Ndata, Ndrop: 76477 9714
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_n4_3_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n4_3_1.txt
+  Ndata, Ndrop: 76052 7551
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n4_3_2.txt
+  Ndata, Ndrop: 74434 7545
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n4_3_3.txt
+  Ndata, Ndrop: 76239 9127
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n4_3_4.txt
+  Ndata, Ndrop: 74381 10238
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_n4_4_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n4_4_1.txt
+  Ndata, Ndrop: 78154 8227
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n4_4_2.txt
+  Ndata, Ndrop: 75405 7813
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n4_4_3.txt
+  Ndata, Ndrop: 77634 10605
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_n4_4_4.txt
+  Ndata, Ndrop: 76088 10899
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_c1_1_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c1_1_1.txt
+  Ndata, Ndrop: 87998 16295
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c1_1_2.txt
+  Ndata, Ndrop: 98216 20585
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c1_1_3.txt
+  Ndata, Ndrop: 92187 13162
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c1_1_4.txt
+  Ndata, Ndrop: 85712 11967
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_c1_2_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c1_2_1.txt
+  Ndata, Ndrop: 86975 20503
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c1_2_2.txt
+  Ndata, Ndrop: 98529 21096
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c1_2_3.txt
+  Ndata, Ndrop: 91515 18565
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c1_2_4.txt
+  Ndata, Ndrop: 87957 13438
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_c1_3_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c1_3_1.txt
+  Ndata, Ndrop: 91544 15053
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c1_3_2.txt
+  Ndata, Ndrop: 95496 21883
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c1_3_3.txt
+  Ndata, Ndrop: 95369 15618
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c1_3_4.txt
+  Ndata, Ndrop: 87319 14044
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_c1_4_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c1_4_1.txt
+  Ndata, Ndrop: 109040 31665
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c1_4_2.txt
+  Ndata, Ndrop: 121208 36944
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c1_4_3.txt
+  Ndata, Ndrop: 116391 35418
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c1_4_4.txt
+  Ndata, Ndrop: 111581 34110
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_c2_1_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c2_1_1.txt
+  Ndata, Ndrop: 88487 12226
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c2_1_2.txt
+  Ndata, Ndrop: 96882 15131
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c2_1_3.txt
+  Ndata, Ndrop: 96874 14425
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c2_1_4.txt
+  Ndata, Ndrop: 81648 13201
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_c2_2_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c2_2_1.txt
+  Ndata, Ndrop: 94965 15357
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c2_2_2.txt
+  Ndata, Ndrop: 87181 15204
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c2_2_3.txt
+  Ndata, Ndrop: 102976 19256
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c2_2_4.txt
+  Ndata, Ndrop: 85897 14182
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_c2_3_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c2_3_1.txt
+  Ndata, Ndrop: 91648 19460
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c2_3_2.txt
+  Ndata, Ndrop: 106158 25161
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c2_3_3.txt
+  Ndata, Ndrop: 104142 19906
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c2_3_4.txt
+  Ndata, Ndrop: 94353 19569
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_c2_4_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c2_4_1.txt
+  Ndata, Ndrop: 87787 13438
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c2_4_2.txt
+  Ndata, Ndrop: 89183 20800
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c2_4_3.txt
+  Ndata, Ndrop: 94307 10936
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c2_4_4.txt
+  Ndata, Ndrop: 85063 12181
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_c3_1_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c3_1_1.txt
+  Ndata, Ndrop: 84872 19055
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c3_1_2.txt
+  Ndata, Ndrop: 76708 15715
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c3_1_3.txt
+  Ndata, Ndrop: 88545 10878
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c3_1_4.txt
+  Ndata, Ndrop: 91836 19296
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_c3_2_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c3_2_1.txt
+  Ndata, Ndrop: 87445 15553
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c3_2_2.txt
+  Ndata, Ndrop: 84061 13075
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c3_2_3.txt
+  Ndata, Ndrop: 87667 9146
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c3_2_4.txt
+  Ndata, Ndrop: 92074 17399
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_c3_3_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c3_3_1.txt
+  Ndata, Ndrop: 95359 21007
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c3_3_2.txt
+  Ndata, Ndrop: 85211 11845
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c3_3_3.txt
+  Ndata, Ndrop: 86585 9517
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c3_3_4.txt
+  Ndata, Ndrop: 91814 17632
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_c3_4_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c3_4_1.txt
+  Ndata, Ndrop: 108431 29723
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c3_4_2.txt
+  Ndata, Ndrop: 99739 24504
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c3_4_3.txt
+  Ndata, Ndrop: 100143 21682
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c3_4_4.txt
+  Ndata, Ndrop: 105055 31079
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_c4_1_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c4_1_1.txt
+  Ndata, Ndrop: 88663 16767
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c4_1_2.txt
+  Ndata, Ndrop: 84855 9941
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c4_1_3.txt
+  Ndata, Ndrop: 87800 11796
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c4_1_4.txt
+  Ndata, Ndrop: 100546 17340
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_c4_2_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c4_2_1.txt
+  Ndata, Ndrop: 139712 26528
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c4_2_2.txt
+  Ndata, Ndrop: 125484 20723
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c4_2_3.txt
+  Ndata, Ndrop: 125960 16352
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c4_2_4.txt
+  Ndata, Ndrop: 144463 28723
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_c4_3_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c4_3_1.txt
+  Ndata, Ndrop: 89602 14082
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c4_3_2.txt
+  Ndata, Ndrop: 84496 10583
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c4_3_3.txt
+  Ndata, Ndrop: 87064 9643
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c4_3_4.txt
+  Ndata, Ndrop: 93717 15998
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_c4_4_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c4_4_1.txt
+  Ndata, Ndrop: 94868 18433
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c4_4_2.txt
+  Ndata, Ndrop: 86810 13019
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c4_4_3.txt
+  Ndata, Ndrop: 79810 17161
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_c4_4_4.txt
+  Ndata, Ndrop: 104699 21779
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_s1_1_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s1_1_1.txt
+  Ndata, Ndrop: 93799 22080
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s1_1_2.txt
+  Ndata, Ndrop: 86910 13500
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s1_1_3.txt
+  Ndata, Ndrop: 89527 12893
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s1_1_4.txt
+  Ndata, Ndrop: 91372 15958
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_s1_2_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s1_2_1.txt
+  Ndata, Ndrop: 90106 14356
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s1_2_2.txt
+  Ndata, Ndrop: 83133 9476
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s1_2_3.txt
+  Ndata, Ndrop: 87795 9431
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s1_2_4.txt
+  Ndata, Ndrop: 86846 15001
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_s1_3_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s1_3_1.txt
+  Ndata, Ndrop: 89687 14570
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s1_3_2.txt
+  Ndata, Ndrop: 82966 10166
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s1_3_3.txt
+  Ndata, Ndrop: 86998 10546
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s1_3_4.txt
+  Ndata, Ndrop: 86347 14082
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_s1_4_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s1_4_1.txt
+  Ndata, Ndrop: 92759 17444
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s1_4_2.txt
+  Ndata, Ndrop: 86975 12554
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s1_4_3.txt
+  Ndata, Ndrop: 87740 14160
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s1_4_4.txt
+  Ndata, Ndrop: 88199 13532
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_s2_1_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s2_1_1.txt
+  Ndata, Ndrop: 81374 12821
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s2_1_2.txt
+  Ndata, Ndrop: 78833 10142
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s2_1_3.txt
+  Ndata, Ndrop: 80215 8758
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s2_1_4.txt
+  Ndata, Ndrop: 82158 12673
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_s2_2_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s2_2_1.txt
+  Ndata, Ndrop: 80590 11534
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s2_2_2.txt
+  Ndata, Ndrop: 77672 9905
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s2_2_3.txt
+  Ndata, Ndrop: 78548 8291
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s2_2_4.txt
+  Ndata, Ndrop: 79530 10698
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_s2_3_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s2_3_1.txt
+  Ndata, Ndrop: 81351 12078
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s2_3_2.txt
+  Ndata, Ndrop: 78156 9629
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s2_3_3.txt
+  Ndata, Ndrop: 79766 7952
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s2_3_4.txt
+  Ndata, Ndrop: 80442 11277
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_s2_4_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s2_4_1.txt
+  Ndata, Ndrop: 81395 14684
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s2_4_2.txt
+  Ndata, Ndrop: 81777 14466
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s2_4_3.txt
+  Ndata, Ndrop: 89572 17616
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s2_4_4.txt
+  Ndata, Ndrop: 82570 14327
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_s3_1_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s3_1_1.txt
+  Ndata, Ndrop: 80555 11346
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s3_1_2.txt
+  Ndata, Ndrop: 76603 11639
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s3_1_3.txt
+  Ndata, Ndrop: 80399 13096
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s3_1_4.txt
+  Ndata, Ndrop: 78077 11804
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_s3_2_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s3_2_1.txt
+  Ndata, Ndrop: 81293 11806
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s3_2_2.txt
+  Ndata, Ndrop: 79008 12271
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s3_2_3.txt
+  Ndata, Ndrop: 81556 14300
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s3_2_4.txt
+  Ndata, Ndrop: 81325 14147
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_s3_3_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s3_3_1.txt
+  Ndata, Ndrop: 80998 13083
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s3_3_2.txt
+  Ndata, Ndrop: 81497 15272
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s3_3_3.txt
+  Ndata, Ndrop: 80116 14363
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s3_3_4.txt
+  Ndata, Ndrop: 80769 14524
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_s3_4_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s3_4_1.txt
+  Ndata, Ndrop: 79814 10876
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s3_4_2.txt
+  Ndata, Ndrop: 77541 12432
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s3_4_3.txt
+  Ndata, Ndrop: 79351 12800
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s3_4_4.txt
+  Ndata, Ndrop: 78161 11383
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_s4_1_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s4_1_1.txt
+  Ndata, Ndrop: 79687 13202
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s4_1_2.txt
+  Ndata, Ndrop: 76123 13872
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s4_1_3.txt
+  Ndata, Ndrop: 79001 15248
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s4_1_4.txt
+  Ndata, Ndrop: 79717 14743
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_s4_2_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s4_2_1.txt
+  Ndata, Ndrop: 80183 12219
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s4_2_2.txt
+  Ndata, Ndrop: 78395 12533
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s4_2_3.txt
+  Ndata, Ndrop: 81054 13759
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s4_2_4.txt
+  Ndata, Ndrop: 89669 22076
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_s4_3_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s4_3_1.txt
+  Ndata, Ndrop: 77992 12548
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s4_3_2.txt
+  Ndata, Ndrop: 76332 13314
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s4_3_3.txt
+  Ndata, Ndrop: 80630 15842
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s4_3_4.txt
+  Ndata, Ndrop: 79126 13939
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_s4_4_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s4_4_1.txt
+  Ndata, Ndrop: 80975 14078
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s4_4_2.txt
+  Ndata, Ndrop: 78238 15638
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s4_4_3.txt
+  Ndata, Ndrop: 81473 16998
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s4_4_4.txt
+  Ndata, Ndrop: 82921 16598
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_s5_1_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s5_1_1.txt
+  Ndata, Ndrop: 81234 6981
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s5_1_2.txt
+  Ndata, Ndrop: 77367 7084
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s5_1_3.txt
+  Ndata, Ndrop: 79414 9180
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s5_1_4.txt
+  Ndata, Ndrop: 80248 8817
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_s5_2_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s5_2_1.txt
+  Ndata, Ndrop: 85232 11756
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s5_2_2.txt
+  Ndata, Ndrop: 80769 10782
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s5_2_3.txt
+  Ndata, Ndrop: 79652 9920
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s5_2_4.txt
+  Ndata, Ndrop: 82735 12762
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_s5_3_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s5_3_1.txt
+  Ndata, Ndrop: 83354 12473
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s5_3_2.txt
+  Ndata, Ndrop: 82202 15363
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s5_3_3.txt
+  Ndata, Ndrop: 80987 13189
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s5_3_4.txt
+  Ndata, Ndrop: 86010 16247
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_s5_4_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s5_4_1.txt
+  Ndata, Ndrop: 80596 9112
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s5_4_2.txt
+  Ndata, Ndrop: 76388 9100
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s5_4_3.txt
+  Ndata, Ndrop: 78862 10725
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s5_4_4.txt
+  Ndata, Ndrop: 78749 10374
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_s6_1_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s6_1_1.txt
+  Ndata, Ndrop: 79004 11037
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s6_1_2.txt
+  Ndata, Ndrop: 77581 12046
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s6_1_3.txt
+  Ndata, Ndrop: 80389 14154
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s6_1_4.txt
+  Ndata, Ndrop: 78301 12079
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_s6_2_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s6_2_1.txt
+  Ndata, Ndrop: 80384 9800
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s6_2_2.txt
+  Ndata, Ndrop: 77765 11052
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s6_2_3.txt
+  Ndata, Ndrop: 81774 13134
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s6_2_4.txt
+  Ndata, Ndrop: 79013 11242
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_s6_3_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s6_3_1.txt
+  Ndata, Ndrop: 89742 14672
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s6_3_2.txt
+  Ndata, Ndrop: 91268 19294
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s6_3_3.txt
+  Ndata, Ndrop: 88529 15876
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s6_3_4.txt
+  Ndata, Ndrop: 94229 20597
+(saved pickle not found!) plots/savedMapInfo/HKmapInfo_s6_4_4000.sav
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s6_4_1.txt
+  Ndata, Ndrop: 79245 10731
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s6_4_2.txt
+  Ndata, Ndrop: 76976 12533
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s6_4_3.txt
+  Ndata, Ndrop: 80305 13864
+opening an altBand cross-check file: altBandCrossCheck_CASU2017_s6_4_4.txt
+  Ndata, Ndrop: 78173 11933
+range of H-K was: -4.2490000000000006 5.300999999999999
+range of H-K is:  0.0 2.5
+printing collection. len(HKsquares) 358390
+ok works now!

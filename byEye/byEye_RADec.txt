@@ -1,0 +1,336 @@
+         name |     RA    |     Dec   |     notes
+UK2016_11_2_C54052 | 271.23756 | -28.62782 | x            
+UK2016_12_4_C44641 | 271.01748 | -28.22919 | x            
+UK2016_13_3_C42577 | 271.35431 | -28.00559 | x            
+UK2016_14_2_C13356 | 271.08426 | -28.50958 | x  sparse, needs more on rise and fall
+UK2016_14_3_C59657 | 271.11556 | -27.95575 | x            
+UK2016_21_2_C47105 | 271.25495 | -27.76279 | x            
+UK2016_22_2_C85132 | 271.39218 | -27.66087 | x            
+UK2016_23_2_C71722 | 271.34854 | -27.48553 | x            
+UK2016_23_4_C48231 | 271.04272 | -27.10497 | x            
+UK2016_32_3_C50698 | 270.33430 | -28.47862 | x            
+UK2016_34_1_C44408 | 269.57838 | -28.70542 | x            
+UK2016_41_1_C59586 | 269.67013 | -28.00005 | x            
+UK2016_41_1_C73149 | 269.56489 | -27.96360 | x            
+UK2016_42_1_C53986 | 269.99718 | -28.02449 | x  should have baseline, but it's too faint maybe
+UK2016_43_2_C43137 | 270.46654 | -27.82538 | x            
+UK2016_43_3_C2894 | 270.41487 | -27.49738 | x            
+UK2016_52_4_C49167 | 268.81038 | -28.61629 | x            
+UK2016_53_3_C88345 | 269.46216 | -28.33078 | x            
+UK2016_54_2_C73062 | 269.20569 | -28.81254 | x            
+UK2016_54_3_C35379 | 269.30834 | -28.48077 | x            
+UK2016_62_4_C11287 | 269.02964 | -27.82540 | x            
+UK2016_63_2_C2419 | 269.33127 | -28.07066 | x            
+UK2016_63_2_C64660 | 269.49036 | -27.89788 | x            
+UK2016_71_1_C16665 | 267.58695 | -29.31545 | x            
+UK2016_71_2_C64564 | 268.25874 | -29.18118 | x            
+UK2016_72_4_C21681 | 267.86917 | -28.85863 | x            
+UK2016_73_3_C7159 | 268.55866 | -28.68344 | x  long timescale, so not a good baseline; could be var star
+UK2016_51_4_C42856 | 268.55870 | -28.68343 | duplicate added after smarter coords match. somewhat better data. (both are OGLE matches)
+UK2016_74_4_C57802 | 267.70448 | -28.54915 | x            
+UK2016_82_2_C12667 | 268.31056 | -28.45064 | x            
+UK2016_82_2_C35588 | 268.55162 | -28.38855 | x            
+UK2016_83_1_C25314 | 267.99572 | -28.18791 | x            
+UK2016_84_2_C70000 | 268.14698 | -28.05852 | x            
+above is the batch found in interestingEvents; below is from ogleCrossCheck
+UK2016_24_1_C50322 | 270.63224 | -27.52957 |              
+UK2016_11_3_C91404 | 271.19646 | -28.10784 | no turnover, but very steep and great baseline
+UK2016_72_4_C5569 | 267.87438 | -28.90560 |              
+UK2016_53_3_C86018 | 269.43852 | -28.33564 |              
+UK2016_54_3_C42597 | 269.21415 | -28.46236 |              
+UK2016_14_1_C46765 | 270.67827 | -28.42271 |              
+UK2016_34_1_C33562 | 269.77705 | -28.73437 |              
+UK2016_53_4_C71803 | 268.87559 | -28.39035 | missing rise sort of, so maybe CVish
+UK2016_41_4_C38612 | 269.64462 | -27.61500 |              
+UK2016_54_4_C77414 | 268.79736 | -28.35873 | sparse data  
+UK2016_21_3_C79276 | 271.12933 | -27.24748 | low A, but it's there
+UK2016_44_4_C49312 | 269.64111 | -27.37878 | chi2 would be better, except strong binary
+UK2016_84_2_C1279 | 268.10742 | -28.25562 | sparse data, except on amplified parrt
+UK2016_43_3_C17394 | 270.39334 | -27.46099 |              
+UK2016_32_3_C84526 | 270.33036 | -28.39190 |              
+UK2016_34_1_C31509 | 269.59444 | -28.73992 | very short timescale, but several ukirt points
+UK2016_53_1_C37299 | 268.98604 | -28.88334 | missing some of the peak for some reason
+UK2016_13_1_C68998 | 270.86587 | -28.37321 | also missing peak part, so it doesn't look so good
+UK2016_83_1_C42074 | 268.03215 | -28.14183 |              
+UK2016_21_4_C54386 | 270.70748 | -27.30642 | yeah ig. no read turnover and very faint, but still decent
+OGLE events from 2017:
+UK2017_c3_2_2_K_C59440 | 267.80586 | -28.79487 |              
+UK2017_n1_1_2_H_C32151 | 266.15236 | -27.25152 |              
+UK2017_n1_2_3_H_C68120 | 266.36172 | -26.72703 |              
+UK2017_n1_3_4_H_C36719 | 265.93511 | -26.61279 |              
+UK2017_n2_1_4_H_C43022drop it's better than the ogle data, but not good. binary  deltachi2 is only 25.  outlier rejection will gelp (2 low oddballs)
+UK2017_n2_3_4_H_C36229 | 265.14997 | -27.47079 |              
+UK2017_n2_4_3_H_C57164 | 265.43662 | -27.40289 |              
+UK2017_n3_1_1_H_C33708 | 264.25651 | -28.99179 |              
+UK2017_n3_1_4_H_C70519 | 264.40616 | -28.44217 | no baseline but nice bump over 0.4mag.  ogle.
+UK2017_n3_2_4_H_C1894 | 264.44733 | -28.65358 |              
+UK2017_n3_4_1_H_C71449 | 264.44735 | -28.65357 | duplicate of previous line, found during smart check.  much better chi2 (551 mcmc)
+XUK2017_n3_2_4_H_C74312  very sparse.  just catching the turnover maybe
+UK2017_n4_1_1_H_C47191 | 263.57995 | -29.81622 | hey is there a planet in there?! = ob170892  binary!
+UK2017_n4_1_2_H_C13146 | 264.18313 | -29.91368 |              
+UK2017_n4_2_1_H_C14611 | 263.83517 | -29.92230 | there's no turnover, but lots of baseline and solid rise
+UK2017_n4_3_1_H_C16983 | 263.90504 | -29.69451 |              
+UK2017_n4_4_2_H_C10481drop no evidence at all in UKIRT, because saturated on spike
+UK2017_s2_2_3_K_C59534 | 267.42193 | -30.11773 | sparse because it's so faint.  otherwise good. keep ig
+UK2017_s2_3_2_K_C22648 | 267.41308 | -30.43949 |              
+UK2017_s3_3_2_H_C36531 | 269.07637 | -27.76655 |              
+UK2017_s3_3_3_H_C4851 | 268.91761 | -27.40953 |              
+UK2017_s4_2_2_H_C46731 | 268.64006 | -28.83051 |              
+UK2017_s4_2_3_H_C6695 | 268.57585 | -28.51139 | not great coverage of the peak, but keep ig  maybe drop
+UK2017_s4_2_3_H_C63804 | 268.72333 | -28.35556 |              
+UK2017_s4_3_1_H_C22864 | 268.20432 | -28.68241 |              
+UK2017_s4_3_1_H_C8864 | 268.20478 | -28.72239 |              
+UK2017_s4_3_2_H_C5059 | 268.59807 | -28.73067 |              
+UK2017_s4_4_1_H_C4837 | 267.94180 | -28.73404 |              
+UK2017_s4_4_1_H_C6776 | 267.90113 | -28.72863 |              
+UK2017_s4_4_2_H_C66437 | 268.39168 | -28.56209 |              
+UK2017_s4_4_3_H_C22961 | 268.47081 | -28.24929 |              
+UK2017_s4_4_3_H_C39509 | 268.41868 | -28.20821 | low SNR data with deltaChi2 only 73
+UK2017_s5_2_1_H_C3318 | 267.87212 | -29.84324 |              
+UK2017_s5_2_2_H_C20412 | 268.28767 | -29.79563 | just an up and down; no baseline  (but it is a MOA and OGLE detection). delchi2 mcmc is 630, but grid only gives 480
+UK2017_s5_3_1_H_C26668 | 267.79033 | -29.55784 | <13mag       
+UK2017_s5_4_1_H_C58995 | 267.46510 | -29.46150 |              
+UK2017_s6_1_1_H_C28096 | 268.40417 | -29.76854 |              
+XUK2017_s6_1_1_H_C35456  not really getting the turnover, except by fit
+UK2017_s6_1_3_H_C2802 | 268.96111 | -29.40117 |              
+UK2017_s6_1_3_H_C59904 | 269.03863 | -29.24824 |              
+UK2017_s6_2_4_H_C77438 | 268.79365 | -29.19064 |              
+UK2017_s6_3_3_H_C53441 | 269.38009 | -29.05479 |              
+UK2017_s6_3_4_H_C68841 | 268.85190 | -29.03640 |              
+UK2017_s6_4_1_H_C11650 | 268.59290 | -29.59510 |              
+UK2017_s6_4_1_H_C2096 | 268.61051 | -29.62258 | not many points on the event, but ok
+UK2017_s6_4_2_H_C42222 | 269.10658 | -29.50182 | not that convincing without ogle  deltachi2=215
+UK2017_s6_4_4_H_C55141 | 268.62194 | -29.03024 |              
+below is from ukirtCheck/interestingEvents for 2017
+first is the ones that I flagged in c2. not all are so perfect though.
+UK2017_c2_1_1_K_C48268 | 265.50800 | -29.70295 |              
+XUK2017_c2_1_1_K_C50080   goes up but not clear really
+UK2017_c2_1_2_K_C58223 | 265.87896 | -29.68361 |              
+XUK2017_c2_1_3_K_C211    bright riser with wiggle at top. several like this
+XUK2017_c2_1_3_K_C63934  bright riser with wiggle at top. several like this
+UK2017_c2_1_3_K_C66061 | 265.86372 | -29.22940 |              
+UK2017_c2_1_4_K_C26500 | 265.60912 | -29.31391 |              
+XUK2017_c2_2_1_K_C62228   bright riser with wiggle at top. several like this
+UK2017_c2_2_3_K_C811 | 266.17452 | -29.39237 |              
+XUK2017_c2_2_3_K_C59047  Yossi didn't flag this one   just falling, no peak
+UK2017_c2_2_4_K_C29721 | 265.60916 | -29.31392 |              
+UK2017_c2_2_4_K_C36904 | 265.84711 | -29.29478 |              
+UK2017_c2_2_4_K_C60995 | 265.86374 | -29.22940 |              
+XUK2017_c2_3_1_K_C29476  Yossi didn't flag this one     bright riser with wiggle at top. several like this
+UK2017_c2_3_2_K_C42383 | 266.22162 | -29.52148 |              
+UK2017_c2_3_2_K_C89594 | 266.23420 | -29.41280 |              
+UK2017_c2_3_3_K_C6413 | 266.16624 | -29.16034 |              
+XUK2017_c2_3_4_K_C52399  Yossi didn't flag this one  this one seems good; check again for baseline once new data comes in.  oops, goes way up. definite var
+UK2017_c2_4_1_K_C39889 | 265.48686 | -29.50746 |              
+XUK2017_c2_4_2_K_C90414   bright riser with wiggle at top. several like this
+UK2017_c2_4_4_K_C42843 | 265.47428 | -29.04651 |              
+UK2017_c2_4_4_K_C77008 | 265.53977 | -28.95821 |              
+these are from Yossi's by eye check of the northern fields (chi>500); I concur
+UK2017_n1_2_1_H_C70644 | 265.88288 | -27.15945 | (p. 3)       
+UK2017_n2_2_2_H_C38114 | 265.80748 | -28.11323 | (p. 11)      
+UK2017_n2_2_4_H_C63195 | 265.19789 | -27.60458 | (p. 14)      
+UK2017_n3_2_2_H_C14595 | 264.99255 | -29.05260 | (p. 21)      
+UK2017_n3_2_2_H_C24005 | 265.05392 | -29.02206 | (p. 22)      
+UK2017_n3_2_3_H_C67210 | 265.13492 | -28.46299 | (p. 27)      
+UK2017_n3_3_2_H_C65783 | 264.97181 | -28.67552 | (p. 28)      
+UK2017_n4_1_2_H_C11322 | 264.25410 | -29.91960 | (p. 30)      
+Yossi's c1 check
+UK2017_c1_1_2_K_C10531 | 266.38608 | -28.92723 | (p. 7)       
+XUK2017_c1_1_2_K_C80796 (p. 46) late variability (first byeye didnt have all data)
+XUK2017_c1_1_2_K_C83203 (p. 47) late variability (first byeye didnt have all data)
+XUK2017_c1_1_2_K_C9238  (p. 52)  not clear.  it goes up but then saturated
+XUK2017_c1_1_4_K_C9692  (p. 64) possible, not very faint/very sparse below peak
+UK2017_c1_2_1_K_C62564 | 266.29121 | -28.80367 | (p. 89)      
+UK2017_c1_2_1_K_C67362 | 266.17386 | -28.79253 | (p. 90)      
+XUK2017_c1_2_3_K_C17634 (p. 155)   goes up
+XUK2017_c1_2_3_K_C8994  (p. 220)  variable ig
+UK2017_c1_2_4_K_C71787 | 266.15744 | -28.33202 | (p. 226)     
+XUK2017_c1_4_1_K_C29922 (p. 302)  goes up steeply but sparse data.  not clear
+UK2017_c1_4_1_K_C57840 | 265.94933 | -28.62680 | (p. 305)     
+UK2017_c1_4_2_K_C58245 | 266.45506 | -28.64564 | (p. 333)     
+UK2017_c1_4_4_K_C69288 | 265.92990 | -28.18842 | (p. 369)     
+Yossi's c2 check  (ones that I didn't flag as good)
+XUK2017_c2_1_1_K_C56316 (p. 7)  no. just some junk really.  it's not in .pdf. typo?
+UK2017_c2_2_2_K_C73820 | 266.27285 | -29.63949 | (p. 69)      
+XUK2017_c2_3_3_K_C9148  (p. 216)  just rising at the end     bright riser with wiggle at top. several like this
+UK2017_c2_4_4_K_C77487 | 265.59412 | -28.95704 | (p. 276)  just rising at the end
+Yossi's c3 check
+XUK2017_c3_1_1_K_C21173 (p. 1)   not much here really. noisy
+UK2017_c3_1_1_K_C21574 | 266.97278 | -28.89983 | (p. 2)       
+UK2017_c3_1_1_K_C87214 | 266.83556 | -28.73965 | (p. 21)      
+UK2017_c3_1_2_K_C44211 | 267.43526 | -28.82744 | (p. 29)      
+UK2017_c3_1_4_K_C883 | 266.99076 | -28.52061 | (p. 168)     
+UK2017_c3_2_4_K_C65142 | 267.30797 | -28.36391 | (p. 209)     
+UK2017_c3_3_1_K_C16791 | 267.27666 | -28.70866 | (p. 1)       
+UK2017_c3_3_3_K_C54218 | 267.63047 | -28.16073 | (p. 19)      
+XUK2017_c3_3_4_K_C11591 (p. 23)     bright riser with wiggle at top. several like this
+UK2017_c3_3_4_K_C14682 | 267.21483 | -28.26864 | (p. 27)      
+UK2017_c3_4_1_K_C23329 | 267.05758 | -28.69614 | (p. 84)      
+UK2017_c3_4_1_K_C25706 | 266.87935 | -28.69115 | (p. 86)      
+UK2017_c3_4_1_K_C67913 | 266.97639 | -28.61056 | (p. 92)      
+UK2017_c3_4_4_K_C44871 | 266.95584 | -28.22843 | (p. 163)     
+UK2017_c3_4_4_K_C51021 | 266.91839 | -28.21630 | (p. 169)     
+XUK2017_c3_4_4_K_C65690 (p. 188)  seems up and down
+Yossi's c4 check
+UK2017_c4_1_1_K_C78285 | 266.47038 | -29.63544 | (p. 1)       
+XUK2017_c4_1_1_K_C9902  (p. 4)  var up and down. no way microlens
+UK2017_c4_1_3_K_C67840 | 267.03873 | -29.22150 | (p. 15)      
+UK2017_c4_1_4_K_C2158 | 266.62002 | -29.39534 | (p. 23)      
+UK2017_c4_1_4_K_C82740 | 266.51322 | -29.20458 | (p. 44)      
+UK2017_c4_2_3_K_C76582 | 267.32524 | -29.23277 | (p. 62)      
+XUK2017_c4_2_4_K_C5718  (p. 66)  hmm, looks ok except lots of var on baseline.  maybe keep
+UK2017_c4_2_4_K_C97661 | 266.65409 | -29.21137 | (p. 71)      
+UK2017_c4_3_1_K_C72123 | 266.75424 | -29.43785 | (p. 77)      
+UK2017_c4_3_2_K_C38270 | 267.17356 | -29.51488 | (p. 78)      
+UK2017_c4_3_2_K_C40263 | 267.14294 | -29.50954 | (p. 79)      
+UK2017_c4_3_2_K_C40297 | 267.14285 | -29.50946 | (p. 80)      
+UK2017_c4_3_4_K_C78037 | 266.80412 | -28.98540 | (p. 92)      
+XUK2017_c4_3_4_K_C80030 (p. 95)  noisy/sparse
+UK2017_c4_4_1_K_C1482 | 266.45097 | -29.61913 | (p. 98)  decent up and down, low amp. i guess we can keep it
+UK2017_c4_4_3_K_C63275 | 266.94928 | -28.99549 | (p. 117)     
+XUK2017_c4_4_4_K_C11657 (p. 121)   bright riser with wiggle at top. several like this
+UK2017_c4_4_4_K_C32653 | 266.54245 | -29.10652 | (p. 136)     
+Yossi's s check
+UK2017_s1_1_2_K_C62604 | 267.82166 | -27.91607 | (p. 10)      
+UK2017_s1_1_2_K_C83799 | 267.76182 | -27.85842 | (p. 12)      
+UK2017_s1_1_4_K_C49289 | 267.19206 | -27.51575 | (p. 20)      
+UK2017_s1_2_4_K_C13223 | 267.40685 | -27.60758 | (p. 40)      
+UK2017_s1_3_1_K_C65567 | 267.41898 | -27.69509 | (p. 71)      
+UK2017_s1_4_4_K_C26804 | 267.14596 | -27.35310 | (p. 105)     
+UK2017_s2_1_3_K_C50659 | 266.97873 | -30.14099 | (p. 110)     
+UK2017_s2_1_4_K_C50334 | 266.57784 | -30.14527 | (p. 113)     
+UK2017_s2_1_4_K_C59995 | 266.58237 | -30.11897 | (p. 114)     
+UK2017_s2_2_1_K_C46827 | 266.93721 | -30.59924 | (p. 118)     
+XUK2017_s2_2_4_K_C16482 (p. 120)  a batch that's 0.1 mag high.  better drop
+UK2017_s2_3_1_K_C37211 | 266.75170 | -30.40798 | (p. 122)     
+UK2017_s2_4_2_K_C16893 | 267.18999 | -30.45853 | (p. 125)     
+UK2017_s3_2_1_H_C36031 | 268.38238 | -27.98481 | (p. 130)     
+UK2017_s3_3_1_H_C38760 | 268.53629 | -27.75471 | (p. 133)     
+UK2017_s5_2_4_H_C44035 | 267.77065 | -29.29541 | (p. 151)     
+2015 data  first the OGLE events then UKIRT, all are chi2>500
+UK2015_12_1_C77892 | 265.42137 | -27.80926 | OGLE event   
+UK2015_13_1_C52005 | 265.25797 | -27.85382 | OGLE event   
+UK2015_13_3_C11284 | 265.69033 | -27.52836 | OGLE event  broad bump with some baseline. ok ig
+UK2015_13_4_C63931 | 265.05351 | -27.37653 | OGLE event  a very nice bump; no baseline
+UK2015_13_4_C78250 | 265.14186 | -27.33831 | OGLE event  just a bump; no baseline
+UK2015_22_2_C64559 | 264.84687 | -27.82028 | OGLE event   
+UK2015_31_1_C69846 | 264.08369 | -28.79140 | OGLE event  not a lot of baseline, but decent bump
+UK2015_42_3_C61412 | 264.06328 | -29.64286 | OGLE event   
+UK2015_44_2_C84175 | 263.66910 | -29.88524 | OGLE event   
+UK2015_11_3_C48664 | 265.93702 | -27.20743 | baseline plus rising ;no turnover
+UK2015_11_4_C68540drop 1 day event with just a few points.  ah crap there's others at the same time (7204)
+UK2015_12_3_C7218 | 265.81974 | -27.54065 | X good one   
+UK2015_22_3_C64180drop gradual rising.  maybe include but probably not
+UK2015_24_3_C29622 | 264.53416 | -27.26142 | X short turning-over bump, but very faint/noisy. ig
+UK2015_43_1_C72416 | 263.33962 | -30.05970 | spikey but it has wings that are above the baseline
+UK2015_5_1_C66432drop another 7204 spike. the best one really
+UK2015_5_4_C104684drop another 7204 spike. even better
+UK2015_5_4_C41475drop another
+UK2015_5_4_C41520drop another tons of these!
+interesting events, checked by geoff. a lot are in/out the grey area
+UK2016_22_2_C63572 | 271.47414 | -27.71411 | X=was in original Aug.3 check where I got 16 (including 4 from paper)
+UK2016_34_1_C53489 | 269.57200 | -28.68117 | X  maybe CV.  OGLE has it as CV?
+UK2016_34_2_C17848 | 270.23608 | -28.77459 | only rising part
+calen comment: solely rising portion, no peak (affects ability to precisely estimate parameters, especially tE)
+UK2016_41_3_C49369 | 270.19171 | -27.59722 | only rising part, but quite flat then quite steep
+calen comment: solely rising portion, no peak
+UK2016_42_1_C65719 | 269.82863 | -27.99473 | X  ok it's outside the OGLE fields
+UK2016_43_4_C17803 | 269.96739 | -27.45161 | only falling. lots of baseline
+UK2016_61_4_C75551 | 268.60479 | -27.70044 | X  calen comment: Fit does not encapsulate two brightest points (above model) and next two brightest points (below)...cause for concern? Was u0 fixed to be ~0?  [note: misses the 500 cut it seems]
+UK2016_62_4_C62432 | 268.88233 | -27.68461 | X a bit sparse, but seems legit
+UK2016_63_2_C66442 | 269.31313 | -27.89282 | only rising; lots of baseline
+calen comment: solely rising portion, no peak
+UK2016_64_1_C30399 | 268.65221 | -28.03587 | X            
+UK2016_64_3_C48225 | 269.11580 | -27.55734 | only falling, but nice clean curve
+UK2016_71_4_C20618 | 267.77211 | -28.85679 | X UKIRT-5    
+UK2016_73_4_C27063 | 267.86690 | -28.63061 | only falling. high mag
+UK2016_73_4_C6399 | 267.89522 | -28.68454 | X            
+UK2016_73_4_C76583 | 267.90890 | -28.49332 | X            
+XUK2016_73_4_C76194  duplicate with previous line. no wait actually it's a bad MOA match. gees
+UK2016_81_1_C72182 | 267.71218 | -28.28181 | X UKIRT-3    
+UK2016_83_4_C32402 | 267.99261 | -27.72709 | X            
+UK2016_84_1_C75956 | 267.61039 | -28.04567 | X UKIRT-2    
+UK2016_84_3_C62370 | 268.25866 | -27.64698 | X            
+UK2016_84_4_C11128 | 267.67063 | -27.78619 | X UKIRT-1    
+*** redo plots after fixing flagInteresting (chidrop1 --> chibase) ***
+new 2015 events (lots of 1-point-only crap. maybe drop1 is actually the way to go)
+UK2015_43_2_C44568 | 263.85893 | -30.12609 | short event, but seems to have rise before/after plus lots of baseline
+UK2015_5_3_C84764drop looks good (short) but be careful, lots of junk at this epoch (7204)
+new 2016 events
+XUK2016_21_4_C54386  dropping to baseline
+XUK2016_22_2_C63572  short but pretty good one.  uh oh, this one is already listed above as o.k. contradictory here. just checked it; I'd say definite yes. oh ok duh; it has an 'X' because it's already above. nevermind.
+XUK2016_34_1_C53489  dang it, all of these already in the list above actually
+UK2016_42_3_C57417 | 270.49270 | -27.61465 | gradual low-u0   [currently just misses the 500 cut]
+more 2017 events? no, none for now.  drop1 really is much better
+some new ones after the new MOA/OGLE cross-matching procedure (now smarter; partially chi-based)
+UK2017_s6_1_3_H_C2802 | 268.96111 | -29.40117 | this really should be a detection. mcmc gives nearly 1000, but grid is 457.  doesn't fit the blending for some reason
+XUK2016_54_1_C32070  just a few points, correct t0 cf MOA detection (no ogle itk) and its high deltachi2
+UK2016_61_3_C49492 | 269.15247 | -27.77661 | MOA detection but low delchi2 due to a few bad points.  outlier fit will help a lot.  oh - it's saturated around the peak; that's the problem.  ok also an OGLE detection (now that coords match is smarter).  same outlier problem
+XUK2016_23_2_C76905  very few points, but a again a good match to MOA t0 and a large delchi2
+XUK2015_33_3_C532   OGLE detection.  decent shape but no baseline
+XUK2015_34_2_C85488  duplicate of the previous line.  clear variability, but could be stellar var
+XUK2016_41_1_C69095 goes up and down; matches OGLE. mcmc delchi2 is 440
+UK2016_12_1_C3635 | 271.04549 | -28.75377 | hmm, this maybe could count. but the OGLE match is leading.  ok ig  (mcmc delchi is only 294; outlier removal might help)
+UK2016_54_2_C46652 | 269.31146 | -28.88092 | not great SNR, but clear baseline and clear turnover  delchi2 270
+UK2016_72_4_C25617 | 267.90495 | -28.84723 | shortish timescale so baseline on both sides  delchi only 243
+new stuff from after the Oct 2017 byEyes
+some is from MULEing, some is from ML classifier
+UK2017_n1_2_4_H_C2529 | 265.90915 | -26.91082 |              
+UK2017_n1_3_1_H_C31273 | 265.93038 | -27.06055 |              
+UK2017_n2_1_4_H_C34240 | 264.81749 | -27.68240 |              
+UK2017_n2_2_1_H_C25880 | 265.29418 | -28.15383 |              
+UK2017_n2_2_2_H_C72716 | 265.67861 | -28.01282 |              
+UK2017_n3_1_3_H_C32823 | 264.72112 | -28.55425 |              
+UK2017_n3_2_2_H_C71033 | 264.97085 | -28.88365 |              
+UK2017_n4_1_1_H_C28869 | 263.66459 | -29.87096 |              
+UK2017_n4_4_1_H_C63803 | 263.74273 | -29.55006 |              
+UK2017_n4_4_4_H_C3795 | 263.59391 | -29.28475 | well mostly just rising, but keep ig
+UK2017_c1_1_2_K_C30628 | 266.50407 | -28.88127 |              
+UK2017_c1_3_1_K_C14423 | 266.25675 | -28.70137 |              
+UK2017_c1_4_1_K_C11959 | 265.84243 | -28.71127 |              
+UK2017_c1_4_4_K_C75460 | 265.82869 | -28.17699 |              
+XUK2017_c2_1_2_K_C61639  hmm, not great
+UK2017_c2_1_3_K_C57317 | 266.01502 | -29.25009 |              
+UK2017_c2_1_4_K_C56795 | 265.58795 | -29.22830 |              
+UK2017_c2_2_4_K_C64352 | 265.69134 | -29.22088 | anomaly?     
+XUK2017_c2_4_1_K_C48747  nice baseline, but only rising
+UK2017_c2_4_4_K_C60887 | 265.42716 | -28.99896 |              
+UK2017_c3_4_1_K_C117893 | 266.99076 | -28.52058 |              
+UK2017_c3_4_1_K_C67440 | 267.04557 | -28.61145 |              
+UK2017_c3_4_2_K_C86588 | 267.50900 | -28.55993 | nice baseline, but only rising
+XUK2017_c3_4_3_K_C6023  maybe, but not great
+UK2017_c4_1_1_K_C78813 | 266.59745 | -29.63392 |              
+UK2017_c4_2_1_K_C14764 | 266.64941 | -29.81703 | planet?      
+UK2017_c4_3_2_K_C24145 | 267.24882 | -29.55444 |              
+UK2017_c4_3_3_K_C50759 | 267.28697 | -29.04856 |              
+UK2017_c4_4_1_K_C516 | 266.51341 | -29.62147 | variable source!
+UK2017_c4_4_4_K_C26910 | 266.39905 | -29.11996 |              
+UK2017_s1_1_2_K_C3451 | 267.69635 | -28.07294 | not great    
+UK2017_s1_1_3_K_C33119 | 267.84179 | -27.55768 |              
+XUK2017_s1_1_4_K_C73468  just rising
+UK2017_s1_2_2_K_C22814 | 268.08756 | -28.01692 |              
+UK2017_s1_2_2_K_C44874 | 267.89010 | -27.95431 |              
+UK2017_s1_2_3_K_C7997 | 268.04613 | -27.62475 |              
+UK2017_s1_2_3_K_C29624 | 267.97168 | -27.56701 |              
+UK2017_s1_2_4_K_C11042 | 267.50371 | -27.61394 |              
+UK2017_s1_2_4_K_C77822 | 267.43163 | -27.43060 |              
+UK2017_s1_3_1_K_C17271 | 267.53591 | -27.81923 |              
+UK2017_s1_4_1_K_C52720 | 267.15192 | -27.72782 |              
+UK2017_s1_4_2_K_C600 | 267.76179 | -27.85845 | not great    
+UK2017_s1_4_3_K_C54038 | 267.77888 | -27.27526 |              
+UK2017_s1_4_3_K_C65895 | 267.75803 | -27.24388 |              
+XUK2017_s1_4_3_K_C30361  not great. rising
+UK2017_s2_1_4_K_C44086 | 266.70971 | -30.16257 |              
+UK2017_s2_3_4_K_C36193 | 266.84809 | -29.96194 | not great    
+UK2017_s2_3_4_K_C15236 | 266.89839 | -30.02323 |              
+UK2017_s2_4_3_K_C41871 | 267.08069 | -29.96337 |              
+UK2017_s3_4_1_H_C22342 | 268.24878 | -27.80167 |              
+UK2017_s4_2_2_H_C27372 | 268.64207 | -28.88560 |              
+UK2017_s4_4_1_H_C48220 | 267.91164 | -28.61475 |              
+UK2017_s5_2_1_H_C64688 | 267.73653 | -29.67317 |              
+UK2017_s5_2_3_H_C73626 | 268.30198 | -29.20173 |              
+UK2017_s5_2_4_H_C73535 | 267.72481 | -29.21192 |              
+UK2017_s5_2_4_H_C17298 | 267.74347 | -29.36940 |              
+UK2017_s5_4_1_H_C31546 | 267.48425 | -29.53933 | only rising  very high mag.  keep ig
+UK2017_s6_1_3_H_C53915 | 268.90908 | -29.26432 |              
+XUK2017_s6_4_3_H_C31990  only rising
