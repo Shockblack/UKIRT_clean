@@ -1,6 +1,6 @@
 # Code for "Mapping the Extinction and Reddening of the Near Infrared Using UKIRT"
 
-Public cleaned version of code used to create maps in paper by Aiden Zelakiewicz, Samson A. Johnson and colaborators.
+Public cleaned version of code used to create extinction maps.
 
 This code allows one to create maps towards the Galactic Center using UKIRT photometry data (CASU or PSF) for all years. In order to run the code, make sure you check the options file and edit any file directories to match those which you will use.
 
