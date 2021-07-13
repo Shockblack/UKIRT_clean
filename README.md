@@ -4,6 +4,8 @@ Public cleaned version of code used to create extinction maps.
 
 This code allows one to create maps towards the Galactic Center using UKIRT photometry data (CASU or PSF) for all years. In order to run the code, make sure you check the options file and edit any file directories to match those which you will use.
 
+Currently purging files and adding comments into functions.
+
 Order to run code (assuming all works):
 1. readData.py
 2. converter.py

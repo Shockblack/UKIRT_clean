@@ -1242,8 +1242,7 @@ def getOGLEalertTime(events,options):
   return events
 #______________________________________________________________________________
 
-def readOGLEcrosscheck(options,dir='ogleCrossCheck/',
-                       onlySameYear=False):
+def readOGLEcrosscheck(options,dir='ogleCrossCheck/', onlySameYear=False):
   import string
   
   filename='ogleCrossCheck_'+options['photomType']+options['year']+'.txt'
