@@ -149,7 +149,6 @@ class redclumpfinder():
                 return [float('NaN'),float('NaN'),float('NaN'),float('NaN'),float('NaN'),float('NaN')]
                 #add logging
             #thus ends passer loop, back in MU1iter
-            #printf (" $MU2iter $ColorRC $STDcolor $sumRC\n");
             #factor of 1.096? seems familiar, can't recall why its scaling it up
             varianceB = (1.096*STDcolor)*(1.096*STDcolor);
             RealSTDcolor = 1.096*STDcolor;
@@ -198,26 +197,6 @@ class redclumpfinder():
             #ipdb.set_trace()
             return [float('NaN'),float('NaN'),float('NaN'),float('NaN'),float('NaN'),float('NaN')]
 
-        #ipdb.set_trace()
-        ##Kclump = (
-        #Kclump = (M0opt*NRCopt + M0opt2*NRCopt2)/(NRCopt+NRCopt2)
-        #if ((np.abs(FinalColorRC - HMKclump) <= 0.03) and (np.abs(Kclump - clump) <= 0.03 )):
-        #    HMKclump = FinalColorRC
-        #else:
-        #    printf ("Restarting!\n");
-        
-        #printf ("debug here below?\n");
-        #printf ("$FinalColorRC \n");
-        #printf ("$ColorRC \n");
-        #$FinalColorRC = 0.2;
-        #printf ("$Iclump \n");
-        #system ("perl RedClumpFinder.plx  $filename $RCnumber $FinalColorRC $Iclump $begin $final $VMIwidth $binnumber $Iterations");
-        #need to restart
-        #exit    
-        #ipdb.set_trace()
-        #return
-
-
     def calcWeights(self,A,B,M_RC,sigma_RC,N_RC):
         #Calculate weights using Nataf 2013 equation 6
         M = self.cmd.filterStarDict['altmag']
@@ -249,27 +228,25 @@ class redclumpfinder():
             yvals = val[fitinds]
             xvals = ((mbin[1:]+mbin[:-1])/2)[fitinds]
 
-            if l > 350:
+            if l > 350: #This just makes the 350+ l values a negative, small value
                 l-=360
-            #Using location to aid initial guesses: order here goes outer, inner, midrange (from observation)
 
-            #Outskirts
-            if abs(b)>0.9:
+            #Using location to aid initial guesses: order here goes outer, inner, midrange (from observation)
+            if abs(b)>0.9: #Outskirts or "outer region"
                 peaks = find_peaks(yvals[np.where(xvals<15)[0]],height=15,width=[8,18])
                 if peaks[0].size==0:
                     M_RCguess=13
                 else:
                     M_RCguess = xvals[peaks[0][0]]
-
-            #most extinct area close to GC
-            elif abs(b) < 0.65 and l < 1.5:
+            
+            elif abs(b) < 0.65 and l < 1.5: #most extinct area close to GC: "center"
                 peaks = find_peaks(yvals,height=70,distance=50)
                 if peaks[0].size==0:
                     M_RCguess=15
                 else:
                     M_RCguess = xvals[peaks[0][0]]
-            #Area in between center and outskirts
-            else:
+            
+            else: #Area in between center and outskirts: "mid-ground"
                 peaks = find_peaks(yvals,height=70,distance=10)
                 if peaks[0].size==0:
                     M_RCguess=14.5
@@ -386,13 +363,13 @@ def redclumpOnlyExp(M,A,B,M_RC,sigma_RC,N_RC):
     term2 = N_RC/(sqrt2pi*sigma_RC)*np.exp(-(M-M_RC)**2/(2*sigma_RC**2))
         #Gaussian for red giant branch bump
     term3 = N_RGBB/(sqrt2pi*sigma_RGBB)*np.exp(-(M-M_RGBB)**2/(2*sigma_RGBB**2))
-        #Gaussian for asymptotic giant branch bump
+
+        #Gaussian for asymptotic giant branch bump || Not used in our work
     #term4 = N_AGBB/(sqrt2pi*sigma_AGBB)*np.exp(-(M-M_AGBB)**2/(2*sigma_AGBB**2))
     
     NMdM = term1 + term2 + term3# + term4
     return NMdM
     
-#def redclumpclassic(self,M,a,b,c,M_RC,sigma_RC):
 def redclumpclassic(M,a,b,c,N_RC,M_RC,sigma_RC):
     quad = a + b*(M-M_RC) + c*(M-M_RC)**2
     gauss = N_RC/(sqrt2pi*sigma_RC) * np.exp(-(M-M_RC)**2/(2*sigma_RC**2))
@@ -400,25 +377,9 @@ def redclumpclassic(M,a,b,c,N_RC,M_RC,sigma_RC):
     return NMdM
 
 
-
 if __name__=='__main__':
     
-    #ipdb.set_trace()
-    #cmd_test = plotCMD.cmd('test.txt',268.5,-28.7,edge_length=3/60.)
-    #cmd_test = plotCMD.cmd('test.txt',269.385168,-28.971528,edge_length=2/60.)
-    #cmd_test = plotCMD.cmd('test.txt',269.318501,-29.771528,edge_length=2/60.)
-    #cmd_test = plotCMD.cmd('test.txt',268.985168,-29.604862,edge_length=2/60.)
-    #cmd_test = plotCMD.cmd('test.txt',268.918501,-29.738195,edge_length=2/60.)
-    #cmd_test = plotCMD.cmd('test.txt',268.885168,-29.704862,edge_length=2/60.)
-    #cmd_test = plotCMD.cmd('test.txt',269.36695 , -28.98901,edge_length=3/60.)
-    #cmd_test = plotCMD.cmd('test.txt',269.36766 , -29.05988,edge_length=3/60.)
-    #cmd_test = plotCMD.cmd('test.txt',266.418501 , -29.004862,edge_length=2/60.)
-    #cmd_test = plotCMD.cmd('test.txt',t,edge_length=2/60.)
-    #cmd_test = plotCMD.cmd('test.txt',266.,-29.,edge_length=3/60.)
-    #cmd_test = plotCMD.cmd('test.txt',266.968501,-29.038195,edge_length=2/60.)
     cmd_test = plotCMD.cmd('test.txt',266.,-29.,edge_length=pram.arcmin/60.)
-    #cmd_test = plotCMD.cmd('test.txt',269.,-29.3,edge_length=.1)
-    #cmd_test = plotCMD.cmd('test.txt',268.5,-29.7,edge_length=.1)
 
     rcfinder = redclumpfinder(cmd_test)
     M_RCguess = rcfinder.icMethod()

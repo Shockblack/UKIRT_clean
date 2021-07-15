@@ -154,10 +154,6 @@ class cmd:
         #for each field found in raw field search
             dict_list = []
             for i in self.raw_field_inds:
-            #dict_list.append(readAltbandCrossCheck(cmd_test.fieldData[cmd_test.raw_field_inds[i]]['year'],cmd_test.fieldData[cmd_test.raw_field_inds[i]]['field'],\
-                #                                           cmd_test.fieldData[cmd_test.raw_field_inds[i]]['ccd']))
-                #dict_list.append(readAltbandCrossCheck(self.fieldData[i]['year'],self.fieldData[i]['field'],self.fieldData[i]['ccd']))
-                #ipdb.set_trace()
 
                 #SAMSON: if you are trying to run, you need to remove everything before psfpickles -Aiden
                 #I also added an allow_pickle argument to be True
@@ -257,7 +253,6 @@ class cmd:
         if type(limit_dict)==type(None):
             print('No limits on color or magnitude')
 
-        #ipdb.set_trace()
         #make a boolean index array to initialize our color_mag cuts
         good_inds = np.ones(len(self.filterStarDict['mag']),dtype=bool) 
 
@@ -275,14 +270,10 @@ class cmd:
         #ipdb.set_trace()
         if 'delta' in limit_dict.keys():
             if percentile_cut:
-                limit_dict['delta'][0]=np.percentile(self.filterStarDict['delta'],15)
+                limit_dict['delta'][0]=np.percentile(self.filterStarDict['delta'],15) #only including stars above 15th percentile in (H-K) color
             low_inds = (self.filterStarDict['delta']) >= limit_dict['delta'][0]
             high_inds = (self.filterStarDict['delta']) <= limit_dict['delta'][1]
-            #will we want a high end cut? Probably not but include one just in case
-            #high_inds = (self.filterStarDict['mag']-self.filterStarDict['altmag']) <= limit_dict['color'][1]
-            #low_inds = (self.filterStarDict['mag']-self.filterStarDict['altmag']) >= limit_dict['color'][0]
-            #will we want a high end cut? Probably not but include one just in case
-            #high_inds = (self.filterStarDict['mag']-self.filterStarDict['altmag']) <= limit_dict['color'][1]
+
             good_inds = good_inds & low_inds & high_inds
         
         self.fitStarDict = {}
@@ -304,14 +295,11 @@ class cmd:
         low_inds = (self.filterStarDict['altmag']) >= low_lim
         high_inds = (self.filterStarDict['altmag']) <= high_lim
         good_inds = good_inds & low_inds & high_inds
-        #ipdb.set_trace()
+
         self.colorFitStarDict = {}
         for key in self.filterStarDict.keys():
             self.colorFitStarDict[key] = self.filterStarDict[key][good_inds]
         return 'Stars cut by magnitude and color'
-
-        
-
 
     def plotFields(self):
         fig, ax = plt.subplots()
@@ -339,18 +327,17 @@ class cmd:
         #plt.rc('text',usetex=True)
         fig,ax = plt.subplots()
         c = coord.SkyCoord(ra=self.ra*u.degree,dec=self.dec*u.degree,frame='icrs')
-        #ipdb.set_trace()
-        #ax.set_title('(RA,Dec)=(%.2f,%.2f), size=%0.1f$^\prime$'%(self.ra,self.dec,60*self.edge_length))
+
         ax.set_title(r'($l,b$)=(%.2f,%.2f), size=%0.1f$^\prime$'%(c.galactic.l.degree,c.galactic.b.degree,60*self.edge_length))
-        #ax.plot(self.filterStarDict['mag']-self.filterStarDict['altmag'],self.filterStarDict['altmag'],'.',markersize=1)
+
         ax.plot(self.filterStarDict['delta'],self.filterStarDict['altmag'],'.',markersize=2)
         try:
-            #ax.plot(self.fitStarDict['mag']-self.fitStarDict['altmag'],self.fitStarDict['altmag'],'.',markersize=1)
+
             ax.plot(self.fitStarDict['delta'],self.fitStarDict['altmag'],'.',markersize=2)
         except:
             print('No stars for fit dictionary')
         try:
-            #ax.plot(self.fitStarDict['mag']-self.fitStarDict['altmag'],self.fitStarDict['altmag'],'.',markersize=1)
+
             ax.plot(self.colorFitStarDict['delta'],self.colorFitStarDict['altmag'],'.',markersize=2)
             if fitcorr:
                 ipdb.set_trace()
@@ -425,9 +412,6 @@ class cmd:
         #Code for the side figure
         ax_hist_y = fig.add_subplot(gs[1:5, 2])
         ax_hist_y.set_ylim([16,12])
-        #ax_hist_y.hist(self.fitStarDict['altmag'], orientation = 'horizontal',bins=numbins, rwidth=0.7,color='dimgray')
-        
-
 
         try:
             #ax.plot(self.fitStarDict['mag']-self.fitStarDict['altmag'],self.fitStarDict['altmag'],'.',markersize=1)

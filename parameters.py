@@ -19,4 +19,5 @@ elif year == 2017:
 #method = 'pix'
 method = 'mag'
 
-#Default pathways
+#Default pathways... Please enter the path to the project folder here so no internal changes need to be made!
+projpath = '/mnt/a/documents/files/surp/ukirt-exinction-maps'
