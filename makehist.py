@@ -4,6 +4,7 @@ import mapper
 import RedClumpFinder as rcf
 import make_map as mm
 import ipdb
+import parameters as pram
 
 
 def relUncertaintyHist(map_data,axis=10):
@@ -13,13 +14,13 @@ def relUncertaintyHist(map_data,axis=10):
     relunc = []
     for pixel in map_data:
         #relunc.append(pixel[axis+1]/pixel[axis]) #Normal uncertainty making
-        #All below is to set crazy uncertainties to 1
+
+        #Sets any crazy high and non existing uncertainties to 1
         rel = pixel[axis+1]/pixel[axis]
         if rel > 1 or rel == 0 or np.isnan(rel) == True:
             rel = 1
         relunc.append(rel)
-        
-    #bins = np.linspace(0.0001,0.01,40)
+
     bins = np.logspace(-4,np.log10(2),40)
     vals,ubins = np.histogram(relunc,bins=bins)
     width = 0.7*(np.log10(ubins[1])-np.log10(ubins[0]))
@@ -34,5 +35,5 @@ def relUncertaintyHist(map_data,axis=10):
     plt.show()
 
 if __name__ == "__main__":
-    data = mm.read_map('maps/inve_guess_2017_2.map')
+    data = mm.read_map('maps/map_'+pram.phot+'_'+str(pram.year)+'_'+str(pram.arcmin)+'.map')
     relUncertaintyHist(data)

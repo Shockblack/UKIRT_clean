@@ -81,15 +81,13 @@ class map:
         
         self.grid_pixel_centers = []
 
+        #Calculates RA and DEC right when map files begins being made for earier use and to save time.
         for ra in ra_range:
             for dec in dec_range:
                 c = coord.SkyCoord(ra=ra*u.degree,dec=dec*u.degree ,frame='icrs')
                 l = c.galactic.l.degree
                 b = c.galactic.b.degree
                 self.grid_pixel_centers.append([ra,dec,l,b])
-
-        #ipdb.set_trace()
-
 
         return
 
@@ -140,23 +138,18 @@ class map:
             #header = 'RA,DEC,edgelength,N_stars,A,Aerr,B,Berr,M_RC,M_RCerr,sigma_RC,sigma_RCerr,N_RC,N_RCerr,FinalColorRC,RealSTDcolorOpt,STDtotal,VarianceMin,MU1opt,MU2opt'
             print('Fitting')
             #============================================================================
-            #Going to try new IC for fitting method... don't know how it will turn out
-            #first attempt: going to give no range for where M_RC can be...
-            #gonna include 'method' variable so I can switch between pixel fitting (old)
-            #and max value fitting (new)
+            #Pix method is an old method that determines the initial conditions based on
+            #those of the previous pixel. Good idea in theory, but didn't work out well
+            #overall. Currently use the actual data from the CMD to determine initial conditions.
             #============================================================================
             #our two options
             #method='pix'
             method='mag'
             if method=='mag':
-                #numbins = 50
-                #if relunc > 0.3 or np.isNan(relunc) == True:
-                #    numbins = 30
-                #else:
-                #    numbins = max([40,int(8*np.log(len(rcfinder.cmd.fitStarDict['altmag'])))]) #finds number of bins with a minimum of 40
+
                 numbins = max([30,int(5*np.log(len(rcfinder.cmd.fitStarDict['altmag'])))])
                 relunc = 1
-                while relunc > 0.25 and numbins > 20:
+                while relunc > 0.25 and numbins > 20: #Changes amount of bins depending on the uncertainty 
                     #IC are now calculated in RedClumpFinder.py, which the line below does
                     M_RCguess = rcfinder.icMethod(numbins=numbins)
                     #
@@ -180,19 +173,17 @@ class map:
                 
             elif method=='pix':
                 try:
-                    #ipdb.set_trace()
+                    
                     #check the geometric distance of the last pixel to make sure it is right next to the new pixel
                     if np.sqrt((self.pixels[-1][0]-self.pixels[-2][0])**2+(self.pixels[-1][1]-self.pixels[-2][1])**2) < 3*self.edge_length and self.pixels[-2][13]/self.pixels[-2][12]<.008:
-                    #color_fit_vals = rcfinder.fitRCnew(rcf.redclumpOnlyExp) 
                         print('Using last pixel as init')
                         color_fit_vals = rcfinder.fitRCnew(rcf.redclumpOnlyExp,A=self.pixels[-2][6],B=self.pixels[-2][8],N_RC=self.pixels[-2][14],M_RC=self.pixels[-2][10],sigma_RC=self.pixels[-2][12])
                     else:
-                        #ipdb.set_trace()
+                        #Defaults to average values in RCF
                         color_fit_vals = rcfinder.fitRCnew(rcf.redclumpOnlyExp)            
                 except:
-                    #ipdb.set_trace()
+                    #Defaults to average values in RCF
                     print('Init guess failed')
-                    #ipdb.set_trace()
                     color_fit_vals = rcfinder.fitRCnew(rcf.redclumpOnlyExp)            
                 print('Done fitting!')
                 
