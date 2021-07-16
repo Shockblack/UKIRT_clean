@@ -1,11 +1,9 @@
 from operator import le
 import numpy as np
-import astropy
 from astropy import coordinates as coord
 from astropy import units as u
 from readData import readUKIRTfields
 import ipdb
-from scipy.signal import find_peaks
 import RedClumpFinder as rcf
 import plotCMD as pcmd
 import random as ran
@@ -160,12 +158,10 @@ class map:
                         pass
                     numbins -= 10
                 
-                #len(peaks[0]) == 0 or peaks[0].size()==0 #trying special case if nothing pops up
                 if plotmag == True:
                     if i == ratio:
                         rcfinder.fitRCMagnitude(rcf.redclumpOnlyExp,plotfit=True,figdir='../misc_figs/maghist'+'_'+str(i)+'.pdf',M_RC=M_RCguess)
                         ratio+=int(self.npixels/30)
-                
                 
 #                if relunc > 0.25:
 #                    rcfinder.fitRCMagnitude(rcf.redclumpOnlyExp,plotfit=True,figdir='../misc_figs/maghist'+'_'+str(i)+'.pdf',M_RC=M_RCguess)

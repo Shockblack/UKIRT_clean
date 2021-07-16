@@ -1,15 +1,12 @@
 from os import path
 import numpy as np
-#import sys
 import plotCMD
-#import cmd from plotCMD
 import lmfit
 import ipdb
 import matplotlib.pyplot as plt
 from astropy import coordinates as coord
 from astropy import units as u
 from scipy.signal import find_peaks
-import mapper
 import parameters as pram
 sqrt2pi = np.sqrt(2*np.pi)
 
@@ -96,7 +93,6 @@ class redclumpfinder():
                 passer = 0
                 ColorRC = 0
                 sumRC = 0
-                numberscolor = 0
                 combinds = np.logical_and(ColorStatus, RCCinds)
                 
                 sumRC = np.sum(self.weights[combinds])
@@ -117,13 +113,7 @@ class redclumpfinder():
                 limitcutoff = 2.5*np.sqrt(STD2)
                 #this is sigma
                 STDcolor = np.sqrt(STD2)
-                #number of failing stars, does nothing
-                failingstars = 0
-            
-                #now we want to copy our combined indices to check if they change later
-                preinds = combinds.copy()
 
-            
                 #make boolean array for excluding sigma clipped points
                 #sigmainds are True for those that pass the sigma clipping
                 sigmainds = np.abs(HMKdiffer - ColorRC) < limitcutoff
@@ -138,7 +128,6 @@ class redclumpfinder():
                     #also reset passer to be one so we go through the loop again
                     passer = 1
                     passer_counter+=1
-
                     
                 if passer_counter>95:
                     ipdb.set_trace()
@@ -156,11 +145,6 @@ class redclumpfinder():
             #add up the lower ninty percent of the sum2a array. If its greater than 1, calc variance 
             #otherwise just use the varaince as the calc variance
             sumsquares = np.sum(np.sort(sum2a)[:int(.9*len(sum2a))])
-            #foreach(0..int(0.90*$#sum2sort)){
-            #for i in 0.9*np.arange(len(sum2sort)):
-            #sumsquares += sum2sort[i]
-            #numA += 1
-
 
             numA = int(.9*len(sum2a))
             if numA > 1:
@@ -202,14 +186,6 @@ class redclumpfinder():
         M = self.cmd.filterStarDict['altmag']
         self.weights = RCgaussian(M,M_RC,sigma_RC,N_RC)/redclumpexp(M,A,B,M_RC,sigma_RC,N_RC)
         
-        
-
-    def getFitStars(self,starDict):
-        #given a cmd class, select stars for later fitting. 
-        #filters on color and magnitude cuts, quality cuts are assumed to have happened previously
-        #
-        #star dict is a dictionary of quality filtered stars
-        return
 
     def icMethod(self,method='mag',numbins=None):
         
@@ -278,7 +254,6 @@ class redclumpfinder():
 
         params = self.modelMag.make_params(A=A,B=B,N_RC=N_RC,M_RC = M_RC,sigma_RC=sigma_RC)
 
-
         params['A'].min = 0
         params['B'].min = 0
         params['N_RC'].min = 1
@@ -286,7 +261,6 @@ class redclumpfinder():
         params['M_RC'].max = 17.
         params['sigma_RC'].min=0
         #params['sigma_RC'].min=.3
-
 
         self.fit = self.modelMag.fit(yvals,params,M=xvals)#,weights=1/(yvals))
 
@@ -302,10 +276,11 @@ class redclumpfinder():
             if self.cmd.l > 350:
                 self.cmd.l -= 360
             ax.plot(xvals,self.fit.best_fit,'C1--',linewidth=3)
+
             if type(pixID) != type(None): #For if I want to know know what pixel this specific plot comes from. Useful for debugging
                 ax.set_title('(l,b)=(%.4f,%.4f), size=%0.1f$^\prime$, Pix=%d'%(self.cmd.l,self.cmd.b,60*self.cmd.edge_length,pixID))
             else:
-                ax.set_title('(l,b)=(%.4f,%.4f), size=%0.1f$^\prime$'%(self.cmd.l,self.cmd.b,60*self.cmd.edge_length))
+                ax.set_title('(l,b)=(%.4f,%.4f), size=%0.1f$^\prime$'%(self.cmd.l,self.cmd.b,60*self.cmd.edge_length)) #Normal title naming
             ax.axvline(self.fit.best_values['M_RC'],color='k',linestyle='--',linewidth=3)
             ax.set_ylabel('Number')
             ax.set_xlabel('$\it{K}$ Magnitude')
@@ -327,14 +302,13 @@ def RCgaussian(M,M_RC,sigma_RC,N_RC):
 
 def redclumpexp(M,A,B,M_RC,sigma_RC,N_RC):
         
-        #definitions
-
+    #definitions
     N_RGBB = 0.201*N_RC
-    N_AGBB = 0.028*N_RC
+    N_AGBB = 0.028*N_RC #not used
     M_RGBB = M_RC+0.737
-    M_AGBB = M_RC-1.07
+    M_AGBB = M_RC-1.07 #not used
     sigma_RGBB = sigma_RC
-    sigma_AGBB = sigma_RC
+    sigma_AGBB = sigma_RC #not used
     
     term1 = A*np.exp(B*(M-M_RC))
         #Gaussian for the red clump
@@ -394,27 +368,3 @@ if __name__=='__main__':
     print(rcfinder.fit.fit_report())
     #ipdb.set_trace()
     print('Number of RC stars in fit: %f\n'%(np.sqrt(np.pi/(2*rcfinder.fit.best_values['sigma_RC']**2))*rcfinder.fit.best_values['N_RC']/(sqrt2pi*rcfinder.fit.best_values['sigma_RC'])))
-    #ipdb.set_trace()
-    """
-    if len(sys.argv) == 4:
-        filename = $ARGV[0]
-        RCnumber = $ARGV[1]
-        VMIclump = $ARGV[2]
-        clump = $ARGV[3]
-        begin = 1.5
-        final = 1.5
-        VMIwidth = 0.25
-        binnumber = 100
-        Iterations = 15000
-
-    elif len(sys.argv) == 8 :
-        filename = $ARGV[0]
-        RCnumber = $ARGV[1]
-        VMIclump = $ARGV[2]
-        clump = $ARGV[3]
-        begin = $ARGV[4]
-        final = $ARGV[5]
-        VMIwidth = $ARGV[6]
-        binnumber = $ARGV[7]
-        Iterations = $ARGV[8]
-    """
