@@ -1,7 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import mapper
-import RedClumpFinder as rcf
 import make_map as mm
 import ipdb
 import parameters as pram
@@ -19,6 +17,7 @@ def relUncertaintyHist(map_data,axis=10):
         rel = pixel[axis+1]/pixel[axis]
         if rel > 1 or rel == 0 or np.isnan(rel) == True:
             rel = 1
+        
         relunc.append(rel)
 
     bins = np.logspace(-4,np.log10(2),40)
