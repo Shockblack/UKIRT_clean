@@ -454,7 +454,8 @@ class cmd:
 
         ax_hist_y.barh(xvals,yvals,color='dimgray',height=0.5*4/numbins)
         if type(fit) != type(None):
-            ax_hist_y.plot(fit,xvals,color='black',linewidth=2)
+            #ax_hist_y.plot(fit,xvals,color='black',linewidth=2)
+            pass
         ax_hist_y.tick_params(axis="y", labelleft=False)
         
         #Sets limits on the histogram by utilizing rounding
@@ -464,6 +465,9 @@ class cmd:
         #ax_hist_y.set_xticks(np.arange(0,cap,step=50))
         inval = int(1.1*yvals.max()/4)
         ax_hist_y.set_xticks(np.arange(0,inval*4,inval))
+
+        if self.l > 350:
+            self.l -=360
 
         if type(pixID) != type(None): #For if I want to know know what pixel this specific plot comes from. Useful for debugging
             ax.set_title('(l,b)=(%.4f,%.4f), size=%0.1f$^\prime$, Pix=%d'%(self.l,self.b,pram.arcmin,pixID))
@@ -543,6 +547,7 @@ class cmd:
         #Might want to comment out next two lines if overlapping occurs
         vals = self.totMagHist
         bins = self.magBins
+
         #vals, bins = np.histogram(self.filterStarDict['altmag'],bins)
         bin_centers = (bins[1:]+bins[:-1])/2
         
@@ -551,10 +556,8 @@ class cmd:
             #ipdb.set_trace()
             self.fitMagHist,bins2 = np.histogram(self.fitStarDict['altmag'],bins)
             #Might want to comment out next two lines if overlapping occurs
+
             vals1 = self.fitMagHist
-            bins1 = bins2
-            #vals1,bins1 = np.histogram(self.fitStarDict['altmag'],bins)
-            #ipdb.set_trace()
             vals2 = vals/vals.max()-vals1/vals.max()
         except:
 
@@ -596,9 +599,9 @@ if __name__=='__main__':
     
     #ipdb.set_trace()
     #cmd_test = cmd('test.txt',268.5,-28.7,edge_length=240/60.)
-    #cmd_test = cmd('test.txt',266.,-29.,edge_length=pram.arcmin/60.)
+    cmd_test = cmd('test.txt',266.,-29.,edge_length=pram.arcmin/60.)
 
-    cmd_test = cmd('test.txt',269.36695 , -28.98901,edge_length=pram.arcmin/60.)
+    #cmd_test = cmd('test.txt',269.36695 , -28.98901,edge_length=pram.arcmin/60.)
     #cmd_test = cmd('test.txt',268.5,-29.7,edge_length=.1)
 
     #cmd_test = cmd('test.txt',267.,-30.5,edge_length=.1)

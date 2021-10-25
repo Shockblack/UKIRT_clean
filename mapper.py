@@ -109,6 +109,16 @@ class map:
         #ipdb.set_trace()
         self.pixels = []
 
+        #Following lines are variables used in calculating mag difference in
+        #lines on map to show UKIRT team
+        lowerMagAvg = 0
+        lowerSum = 0
+        upperMagAvg = 0
+        upperSum = 0
+        normMagAvg = 0
+        normSum = 0
+        ilist = []
+
         #first pixel done manually
         pixel = self.pixel_centers[0]
         cmd = pcmd.cmd('test.txt',pixel[0],pixel[1],l=pixel[2],b=pixel[3],edge_length=self.edge_length)
@@ -142,21 +152,96 @@ class map:
             #============================================================================
             #our two options
             #method='pix'
+
+            if pixel[2]>358.96 and pixel[2] < 359.0113 and pixel[3] > -1.52 and pixel[3] < -1.436:
+                ilist.append(i)
+
             method='mag'
             if method=='mag':
 
-                numbins = max([30,int(5*np.log(len(rcfinder.cmd.fitStarDict['altmag'])))])
+                #numbins = max([30,int(5*np.log(len(rcfinder.cmd.fitStarDict['altmag'])))])
+                numbins = 90
                 relunc = 1
-                while relunc > 0.25 and numbins > 20: #Changes amount of bins depending on the uncertainty 
-                    #IC are now calculated in RedClumpFinder.py, which the line below does
+                relunc1 = 0.5
+                numbins1 = numbins
+
+                M_RCguess = rcfinder.icMethod(numbins=numbins)
+                color_fit_vals = rcfinder.fitRCnew(rcf.redclumpOnlyExp,M_RC=M_RCguess)
+
+#                while relunc > 0.25 and numbins > 20: #Changes amount of bins depending on the uncertainty 
+#                    #IC are now calculated in RedClumpFinder.py, which the line below does
+#                    M_RCguess = rcfinder.icMethod(numbins=numbins)
+#                    
+#                    color_fit_vals = rcfinder.fitRCnew(rcf.redclumpOnlyExp,M_RC=M_RCguess)
+#
+#                    try:
+#                        relunc = np.sqrt(rcfinder.fit.covar[2,2])/rcfinder.fit.best_values['M_RC']
+#                    except:
+#                        pass
+#                    numbins -= 10
+#
+#                    #This section is just making sure that the unc is indeed decreasing with bin decrease
+#                    M_RCguess = rcfinder.icMethod(numbins=numbins)
+#                    color_fit_vals = rcfinder.fitRCnew(rcf.redclumpOnlyExp,M_RC=M_RCguess)
+#                    try:
+#                        relunc1 = np.sqrt(rcfinder.fit.covar[2,2])/rcfinder.fit.best_values['M_RC']
+#                        if relunc1 > relunc or relunc1 == relunc:
+#                            print("Uncertainty did not decrease!")
+#                    except:
+#                        pass
+#                    
+                while relunc1 < relunc and numbins >20:
+                    numbins = numbins1
                     M_RCguess = rcfinder.icMethod(numbins=numbins)
-                    #
                     color_fit_vals = rcfinder.fitRCnew(rcf.redclumpOnlyExp,M_RC=M_RCguess)
                     try:
                         relunc = np.sqrt(rcfinder.fit.covar[2,2])/rcfinder.fit.best_values['M_RC']
                     except:
                         pass
-                    numbins -= 10
+                    
+                    numbins1 = numbins-5
+
+                    M_RCguess = rcfinder.icMethod(numbins=numbins1)
+                    color_fit_vals = rcfinder.fitRCnew(rcf.redclumpOnlyExp,M_RC=M_RCguess)
+                    try:
+                        relunc1 = np.sqrt(rcfinder.fit.covar[2,2])/rcfinder.fit.best_values['M_RC']
+                        if relunc1 > relunc or relunc1 == relunc:
+                            print("Uncertainty did not decrease!")
+                    except:
+                        pass
+
+#                try:
+#                    rchisq = rcfinder.fit.redchi
+#                except:
+#                    print('NO RCHISQR')
+#
+#                numbins1=numbins-5
+#                M_RCguess = rcfinder.icMethod(numbins=numbins1)
+#                color_fit_vals = rcfinder.fitRCnew(rcf.redclumpOnlyExp,M_RC=M_RCguess)
+#                try:
+#                    rchisq1 = rcfinder.fit.redchi
+#                except:
+#                    print('NO RCHISQR1')
+#
+#                while abs(rchisq1-1)<abs(rchisq-1) and numbins > 20:
+#                    numbins=numbins1
+#                    M_RCguess = rcfinder.icMethod(numbins=numbins1)
+#                    color_fit_vals = rcfinder.fitRCnew(rcf.redclumpOnlyExp,M_RC=M_RCguess)
+#                    try:
+#                        rchisq = rcfinder.fit.redchi
+#                    except:
+#                        pass
+#
+#                    numbins1 = numbins - 5
+#                    M_RCguess = rcfinder.icMethod(numbins=numbins1)
+#                    color_fit_vals = rcfinder.fitRCnew(rcf.redclumpOnlyExp,M_RC=M_RCguess)
+#
+#                    try:
+#                        rchisq1 = rcfinder.fit.redchi 
+#                        if abs(rchisq1-1)>abs(rchisq-1) or rchisq == rchisq1:
+#                            print("REDCHI did not decrease!")
+#                    except:
+#                        pass
                 
                 if plotmag == True:
                     if i == ratio:
@@ -220,6 +305,18 @@ class map:
             if l > 350:
                 l -= 360
 
+            if i >= 4637 and i <= 4665:
+                normSum += self.pixels[-1][10]
+                normMagAvg = normSum/(i-4739)
+
+            if i >= 4740 and i <= 4768:
+                lowerSum += self.pixels[-1][10]
+                lowerMagAvg = lowerSum/(i-4739)
+
+            if i >= 4848 and i <= 4876:
+                upperSum += self.pixels[-1][10]
+                upperMagAvg = upperSum/(i-4847)
+
             if checkarea == 1:
             #Creates a cmd with histogram subplot if the number of red clump stars is too low
                 if self.pixels[-1][14] < 10 and abs(pixel[3]) < 0.65 and l < 1.5:
@@ -243,7 +340,8 @@ class map:
                     cmd.plotCMDhist(cm_dict,plotsave=True,fit=fit,figdir='../misc_figs/BadNRC/badNRC_'+str(i)+'.pdf',pixID=i)
 
             elif checkarea == 3:
-                if self.pixels[-1][10] > 14.7 and l > 1.5:
+                #if self.pixels[-1][10] > 14.7 and l > 1.5:
+                if i ==6730:
                     limit_dict = {'N':[10,1e6],'altN':[3,1000]}# {'mag':[12,15]}
                     cmd.getStars(limit_dict)
                     cm_dict = {'altmag':[12,16],'delta':[-1,5]}
@@ -251,7 +349,7 @@ class map:
                     rcfinder=rcf.redclumpfinder(cmd)
                     M_RCguess = rcfinder.icMethod()
                     fit = rcfinder.fitRCMagnitude(rcf.redclumpOnlyExp, plotfit=False, M_RC=M_RCguess)
-                    cmd.plotCMDhist(cm_dict,plotsave=True,fit=fit,figdir='../misc_figs/BadNRC/badNRC_'+str(i)+'.pdf',pixID=i)
+                    cmd.plotCMDhist(cm_dict,plotsave=True,fit=fit,figdir='../misc_figs/BadNRC/badNRC_'+str(i)+'.jpg')#,pixID=i)
             #del rcfinder
             #ipdb.set_trace()
             if i%1000 == 0:
@@ -260,7 +358,14 @@ class map:
         print('Pixels for review including [Pix ID, RA, DEC, l, b] are:')
         for k in range(len(badpix)):
             print(badpix[k])
-        #ipdb.set_trace()
+        print("Upper mag avg: ",upperMagAvg)
+        print("Lower mag avg: ",lowerMagAvg)
+        print("Norm mag avg: ", normMagAvg)
+        print("Weird Mag Difference: ", upperMagAvg-lowerMagAvg)
+        print('Norm Mag Difference: ', abs(lowerMagAvg-normMagAvg))
+
+        print(ilist)
+        ipdb.set_trace()
 
 
 

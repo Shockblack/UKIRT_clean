@@ -97,7 +97,7 @@ try:
     axisIn = int(float(input('Enter Integer 1-11: ')))
     print("Input accepted! Selected type:",axisIn)
     #Labels for the color bars
-    label=[r'$N-Stars$',r'$A$',r'$A-error$',r'$B$',r'$B-error$',r'$A(k)$',r'$A(k)-error$',u'$sigma_{RC} $',r'$sigma_{RC}-error $',r'$N_{RC}$',r'$N_{RC}-error$',r'FinalColorRC',r'RealSTDcolorOpt']
+    label=[r'$N-Stars$',r'$A$',r'$A-error$',r'$B$',r'$B-error$',r'$A(k)$',r'$A(k)-error$',u'$sigma_{RC} $',r'$sigma_{RC}-error $',r'$N_{RC}$',r'$N_{RC}-error$',r'$E(H-K)$',r'RealSTDcolorOpt']
     cblabel=label[axisIn-1]
     #Aligning the value inputed with the location in the list
     axisIn += 4
@@ -140,9 +140,9 @@ else:
     mtype = axisHeader[axisIn]
 
 if bool(nameadd) == True:
-    fignameIn = mtype+'_'+pram.phot+'_'+str(yearIn)+'_'+str(int(edgeIn))+'_'+str(nameadd)
+    fignameIn = mtype+'_'+pram.phot+'_'+str(yearIn)+'_'+str(int(edgeIn))+'_'+str(nameadd) #Creates file name for map if you want an extension
 else:
-    fignameIn = mtype+'_'+pram.phot+'_'+str(yearIn)+'_'+str(int(edgeIn))
+    fignameIn = mtype+'_'+pram.phot+'_'+str(yearIn)+'_'+str(int(edgeIn)) #Standard map name without extension
 print(
 """
 Creating Map...

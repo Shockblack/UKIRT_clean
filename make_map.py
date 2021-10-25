@@ -31,12 +31,10 @@ def plot_point_map(map_data,axis=6):
     
     norm = matplotlib.colors.Normalize(vmin=cmap_min,vmax=cmap_max)
     cmap = matplotlib.cm.get_cmap('cividis')
-    #sc = ax.scatter(map_data[:,0],map_data[:,1],facecolor=cmap(norm(map_data[:,axis])))
+
     sc = ax.scatter(map_data[:,0],map_data[:,1],marker='.',c=map_data[:,axis],cmap=cmap,vmin=cmap_min,vmax=cmap_max)#facecolor=cmap(norm(map_data[:,axis])))
     fig.colorbar(sc,ax=ax)#,vmax=cmap_max,vmin=cmap_min)
-    #ipdb.set_trace()
-    #ax.set_xlim(250,300)
-    #ax.set_ylim(-50,0)
+
     ax.set_aspect('equal')
     #plt.show()
 
@@ -44,11 +42,7 @@ def plot_point_map(map_data,axis=6):
 def calc_angle(ra1,dec1,ra2,dec2):
     c1 = coord.SkyCoord(ra=ra1*u.degree,dec=dec1*u.degree,frame='icrs')
     c2 = coord.SkyCoord(ra=ra2*u.degree,dec=dec2*u.degree,frame='icrs')
-    
     angle = np.degrees(np.arctan2(c2.galactic.b.degree-c1.galactic.b.degree,c2.galactic.l.degree-c1.galactic.l.degree))
-    #angle = np.degrees(np.arctan2(c2.galactic.b.radians-c1.galactic.b.radians,c2.galactic.l.radians-c1.galactic.l.radains))
-    #angle = np.degrees(np.arctan2(np.radians(c2.galactic.l.degree-c1.galactic.l.degree),np.radians(c2.galactic.b.degree-c1.galactic.b.degree)))
-
     return angle
 
 def do_nothing(array):
@@ -72,12 +66,6 @@ def plot_grid_map(map_data,lb=True,func=do_nothing,axis=7,cb_label=r'$A(K)$',pat
     cmap_max = np.percentile(good_data,95) 
     cmap_min = np.percentile(good_data,5)
 
-    #norm = matplotlib.colors.Normalize(vmin=cmap_min,vmax=cmap_max)
-    #cmap = matplotlib.cm.get_cmap('viridis_r')
-    #sc = ax.scatter(np.linspace(cmap_min,cmap_min,100),np.linspace(cmap_min,cmap_min,100)+1e5,c=map_data[:,axis],cmap=cmap,vmin=cmap_min,vmax=cmap_max)#facecolor=cmap(norm(map_data[:,axis])))
-
-    #fig.colorbar(sc,ax=ax)
-
     norm = matplotlib.colors.Normalize(vmin=cmap_min,vmax=cmap_max)
     cmap = cm.get_cmap('cividis_r')
     #sc = ax.scatter(map_data[:,0],map_data[:,1],facecolor=cmap(norm(map_data[:,axis])))
@@ -85,6 +73,11 @@ def plot_grid_map(map_data,lb=True,func=do_nothing,axis=7,cb_label=r'$A(K)$',pat
     cbar = fig.colorbar(sc,ax=ax)#,vmax=cmap_max,vmin=cmap_min)
     cbar.set_label(cb_label)
     
+    #Check location of grids where line discontinuity occurs
+    #We first find location then try to find avg mag difference
+    
+
+        
     if lb:
         #prep for l,b
         pixel = map_data[0]
@@ -99,32 +92,35 @@ def plot_grid_map(map_data,lb=True,func=do_nothing,axis=7,cb_label=r'$A(K)$',pat
             #    print(pixel[0],pixel[1],pixel[2],pixel[3])
             if np.abs(pixel[3]) <1 and pixel[axis]<13.5:
                 print(pixel[0],',',pixel[1],pixel[2],pixel[3])
-            
-            #if pixel[3] > -0.7 and pixel[3] < 0.4 and pixel[10] < 13.7 and pixel[2] > 0 and pixel[2] < 0.5: #This was to check a bad pixel. Can be deleted after fixed
-            #    ipdb.set_trace()
 
             if pixel[2]>160:
                 rect = pat.Rectangle((pixel[2]-360,pixel[3]),pixel[4],pixel[4],angle=angle,facecolor=cmap(norm(func(pixel[axis]))))
             else:
                 rect = pat.Rectangle((pixel[2],pixel[3]),pixel[4],pixel[4],angle=angle,facecolor=cmap(norm(func(pixel[axis]))))
+            
+            #Lines below for coloring red spots on sharp line changes (UKIRT stuff)
+            #if pixel[2]>358.96 and pixel[2] < 359.0113 and pixel[3] > -1.52 and pixel[3] < -1.435:
+            #    rect = pat.Rectangle((pixel[2]-360,pixel[3]),pixel[4],pixel[4],angle=angle,facecolor='red')
+                
             ax.add_patch(rect)
 
 
-        ax.set_xlim(2.8,-2.8)
-        ax.set_ylim(-2.8,2.8)
+        ax.set_xlim(2.8,-2.2)
+        ax.set_ylim(-2.8,2.1)
         ax.set_xlabel('$l$')
         ax.set_ylabel('$b$')
     
     ax.set_aspect('equal')
-    plt.savefig(path+figname)
+    #plt.savefig(path+figname)
+    plt.show()
+
 
 
 if __name__=='__main__':
-    #test_map = read_map('maps/test_map1000')
-    #test_map = read_map('maps/map_2017_2.7000.tmp.map')
+
     test_map = read_map('maps/map_PSF_2017_2.map')
-    #test_map = read_map('maps/map_2017_2.map')
+    
     while True:
         ipdb.set_trace()
-        plot_grid_map(test_map,func=A_K,axis=10,figname='firstfig.pdf')#[:1000])
+        plot_grid_map(test_map,func=A_K,axis=10,figname='MagForUKIRT_PSF_2017.pdf')#[:1000])
         #plot_grid_map(test_map,func=A_K,axis=7)#[:1000])

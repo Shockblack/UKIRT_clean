@@ -11,9 +11,6 @@ import parameters as pram
 sqrt2pi = np.sqrt(2*np.pi)
 
 class redclumpfinder():
-    #def __init__(self,filename,RCnumber,VMIclump,clump,begin=1.5,final=1.5,VMIwidth=0.25,binnumber=100,Iterations=15000):
-    #    self.filename=filename
-    #def __init__(self,cmdclass,RCnumber,VMIclump,clump,begin=1.5,final=1.5,VMIwidth=0.25,binnumber=100,Iterations=15000):
     def __init__(self,cmdclass,RCnumber=1,VMIclump=1.,clump=999,begin=1.5,final=1.5,VMIwidth=0.25,binnumber=100,Iterations=15000):
         self.cmd = cmdclass
         self.RCnumber=RCnumber
@@ -204,7 +201,7 @@ class redclumpfinder():
             yvals = val[fitinds]
             xvals = ((mbin[1:]+mbin[:-1])/2)[fitinds]
 
-            if l > 350: #This just makes the 350+ l values a negative, small value
+            if l > 350: #This just makes the 350+ l values their corresponding negative value
                 l-=360
 
             #Using location to aid initial guesses: order here goes outer, inner, midrange (from observation)
@@ -262,7 +259,7 @@ class redclumpfinder():
         params['sigma_RC'].min=0
         #params['sigma_RC'].min=.3
 
-        self.fit = self.modelMag.fit(yvals,params,M=xvals)#,weights=1/(yvals))
+        self.fit = self.modelMag.fit(yvals,params,M=xvals)#,weights=1/(np.sqrt(yvals)))
 
         if plotfit:
             fig, ax = plt.subplots()
