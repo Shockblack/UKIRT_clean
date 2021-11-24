@@ -51,46 +51,53 @@ class redclumpfinder():
         fitMags = []
         fitHMK = []
 
-        MU1min = max(ColorRCinput-2.5,0)
+        #MU1min = max(ColorRCinput-2.5,0)
+        MU1min = -0.5 #This is a test to see if its beuno
         MU1max = ColorRCinput-.01
         MU1step = 0.01
-        MU1s = np.arange(MU1min,MU1max,step=MU1step)
+        MU1s = np.arange(MU1min,MU1max,step=MU1step) #Makes a range of values to brute force the color over
         MU2 = ColorRCinput
-        Kmags = self.cmd.filterStarDict['altmag']
-        HMKdiffer = self.cmd.filterStarDict['delta']
+        Kmags = self.cmd.filterStarDict['altmag'] #Currently not being used, pulls K-band magnitude from best fit
+        HMKdiffer = self.cmd.filterStarDict['delta'] #Pulls the best fit for (H-K) color from CMD
 
         VarianceMin = 1000000
 
         for MU1 in MU1s:
             
-            #calculate differences between of H-K color and foreground disk guess and RCcolorinput
+            #calculate differences between of H-K color and foreground disk guess and RC Color Input
             MU1diff = np.abs(HMKdiffer-MU1)
             MU2diff = np.abs(HMKdiffer-ColorRCinput)
+
             #find indices that are closer to colorRCinput
             #RCCinds are RCColor indices where MU2diff is less than MU1
             #actually, I'm going to carry these inds into future calcs rather than make new arrays
             #THESE ARE TRUE IF THE COLOR IS CLOSER TO THE RC
+
+            #This returns true if a stars color is closer to the red clump than the foreground
             RCCinds = MU1diff>MU2diff
+
             #those colors closer to RC guess
             HMKverygood = HMKdiffer[RCCinds]
             #weights of those colors closer to RC
             #XXX still need to calc weights
             #weightsverygood = weights[RCCinds]
-            #squared color differneces 
+            #squared color differneces for RedClumb
             sum2b = HMKdiffer[RCCinds]**2
             #squared sum of color distances for those closer to the foreground disk
             sum2a = HMKdiffer[~RCCinds]**2
+
             #color status for fitting later, whether rejected or not
-            ColorStatus = np.ones(len(HMKdiffer),dtype=bool)
+            ColorStatus = np.ones(len(HMKdiffer),dtype=bool) #list of True boolean values
             
             #loop controller
             passer = 1
             passer_counter = 0
+            
             while passer==1 and passer_counter<100:
                 passer = 0
                 ColorRC = 0
                 sumRC = 0
-                combinds = np.logical_and(ColorStatus, RCCinds)
+                combinds = np.logical_and(ColorStatus, RCCinds) #True if ColorStatus and RCCinds both true
                 
                 sumRC = np.sum(self.weights[combinds])
                 sumColorRC = np.sum(self.weights[combinds]*HMKdiffer[combinds])
@@ -126,8 +133,8 @@ class redclumpfinder():
                     passer = 1
                     passer_counter+=1
                     
-                if passer_counter>95:
-                    ipdb.set_trace()
+                #if passer_counter>95:
+                    #ipdb.set_trace()
             if passer_counter>95:
                 #XXX
                 #ipdb.set_trace()

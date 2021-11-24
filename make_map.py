@@ -122,5 +122,5 @@ if __name__=='__main__':
     
     while True:
         ipdb.set_trace()
-        plot_grid_map(test_map,func=A_K,axis=10,figname='MagForUKIRT_PSF_2017.pdf')#[:1000])
+        plot_grid_map(test_map,func=A_K,axis=16,figname='MagForUKIRT_PSF_2017.pdf')#[:1000])
         #plot_grid_map(test_map,func=A_K,axis=7)#[:1000])

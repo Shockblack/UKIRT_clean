@@ -307,7 +307,7 @@ class map:
 
             if i >= 4637 and i <= 4665:
                 normSum += self.pixels[-1][10]
-                normMagAvg = normSum/(i-4739)
+                normMagAvg = normSum/(i-4637)
 
             if i >= 4740 and i <= 4768:
                 lowerSum += self.pixels[-1][10]
