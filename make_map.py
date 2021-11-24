@@ -9,8 +9,7 @@ from readData import readUKIRTfields
 from readData import readAltbandCrossCheck
 import astropy
 from astropy import coordinates as coord
-from astropy import units as u
-import plotly.express as px
+from astropy import units as u 
 
 def read_map(filename):
     #ipdb.set_trace()
