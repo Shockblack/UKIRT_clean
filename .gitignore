@@ -12,3 +12,4 @@ plots_sam/
 !.vscode/launch.json
 !.vscode/extensions.json
 *.code-workspace
+.DS_Store

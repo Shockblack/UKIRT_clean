@@ -48,11 +48,18 @@ class redclumpfinder():
 
 
     def determineColor(self,ColorRCinput):
+        """
+        Uses a brute force method to minimize the weighted variance and finds the color of the Red Clump.
+        
+        """
+
         fitMags = []
         fitHMK = []
 
-        #MU1min = max(ColorRCinput-2.5,0)
-        MU1min = -0.5 #This is a test to see if its beuno
+        #Testing a min mu value of -0.5 
+        MU1min = max(ColorRCinput-2.5,0)
+        #MU1min = -0.5 #This is a test to see if its beuno (it's not)
+        
         MU1max = ColorRCinput-.01
         MU1step = 0.01
         MU1s = np.arange(MU1min,MU1max,step=MU1step) #Makes a range of values to brute force the color over
@@ -99,9 +106,9 @@ class redclumpfinder():
                 sumRC = 0
                 combinds = np.logical_and(ColorStatus, RCCinds) #True if ColorStatus and RCCinds both true
                 
-                sumRC = np.sum(self.weights[combinds])
-                sumColorRC = np.sum(self.weights[combinds]*HMKdiffer[combinds])
-                ColorRC = sumColorRC/sumRC
+                sumRC = np.sum(self.weights[combinds]) #Sum of weights
+                sumColorRC = np.sum(self.weights[combinds]*HMKdiffer[combinds])#Sum of weights and color
+                ColorRC = sumColorRC/sumRC #Takes the weighted average of the RC color
                 
                 #loop through all the color measurements
                 #I think this can be done by ANDing the ColorStatus and RCCinds
@@ -111,15 +118,18 @@ class redclumpfinder():
                 V2 = np.sum(self.weights[combinds]**2)
                 VARsum = np.sum(self.weights[combinds]*(HMKdiffer[combinds]-ColorRC)**2)
 
-                #now, get the sigma of the color, unsure, this is variance
+                #Now obtain the variance
                 STD2 = (V1/(V1*V1 - V2))*VARsum
-                #the cutoff is 2.5sigma
-                limitcutoff = 2.5*np.sqrt(STD2)
-                #this is sigma
+
+                #Sigma is sqrt variance
                 STDcolor = np.sqrt(STD2)
 
-                #make boolean array for excluding sigma clipped points
-                #sigmainds are True for those that pass the sigma clipping
+                #the cutoff is 2.5 sigma
+                limitcutoff = 2.5*STDcolor
+
+                #Start sigma clipping for 2.5 sigma
+                #Creates a bolean array based on whether a point is within cutoff
+                #sigmainds are True for those that pass the sigma clipping (and false otherwise)
                 sigmainds = np.abs(HMKdiffer - ColorRC) < limitcutoff
             
                 #ColorStatus is all true going into this
@@ -141,6 +151,7 @@ class redclumpfinder():
                 print('passer_counter limit reached')
                 return [float('NaN'),float('NaN'),float('NaN'),float('NaN'),float('NaN'),float('NaN')]
                 #add logging
+                
             #thus ends passer loop, back in MU1iter
             #factor of 1.096? seems familiar, can't recall why its scaling it up
             varianceB = (1.096*STDcolor)*(1.096*STDcolor);

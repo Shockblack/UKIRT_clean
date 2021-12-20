@@ -110,8 +110,8 @@ def plot_grid_map(map_data,lb=True,func=do_nothing,axis=7,cb_label=r'$A(K)$',pat
         ax.set_ylabel('$b$')
     
     ax.set_aspect('equal')
-    #plt.savefig(path+figname)
-    plt.show()
+    plt.savefig(path+figname)
+    #plt.show()
 
 
 
