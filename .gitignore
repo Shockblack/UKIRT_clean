@@ -5,6 +5,7 @@ plots_sam/
 *pyc
 *pdf
 *jpg
+*png
 *~
 .vscode/*
 !.vscode/settings.json
