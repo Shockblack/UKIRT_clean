@@ -17,6 +17,8 @@
 #   06-Feb-2022: File Created
 #   14-Feb-2022: Added Ra and Dec calculations, moved
 #                file writing to its own function.
+#                Changed delimiter in file to ',' rather
+#                than spaces.
 #-------------------------------------------------------
 
 # Importing necessary packages and files
@@ -100,8 +102,11 @@ class gonzDat:
         fileout.write('# ra, dec, l, b, AK, sigmaAK, E_JK, sigmaE_JK, [Fe/H] \n')
         for i in range(len(self.rawGonzDat)):
 
-            for d in self.gonzData[i]:
-                fileout.write(str(d) +' ')
+            for d in range(len(self.gonzData[i])):
+                if d != 8:
+                    fileout.write(str(self.gonzData[i][d]) + ',')
+                else:
+                    fileout.write(str(self.gonzData[i][d]))
             
             fileout.write('\n')
         

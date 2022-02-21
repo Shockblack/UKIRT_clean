@@ -62,7 +62,7 @@ def plot_grid_map(map_data,lb=True,func=do_nothing,axis=7,cb_label=r'$A(K)$',pat
     good_data = func(map_data[:,axis][~np.isnan(map_data[:,axis])])
     cmap_max = np.max(good_data)
     cmap_min = np.min(good_data)
-    cmap_max = np.percentile(good_data,95) 
+    cmap_max = np.percentile(good_data,100) 
     cmap_min = np.percentile(good_data,5)
 
     norm = matplotlib.colors.Normalize(vmin=cmap_min,vmax=cmap_max)
@@ -104,6 +104,8 @@ def plot_grid_map(map_data,lb=True,func=do_nothing,axis=7,cb_label=r'$A(K)$',pat
             ax.add_patch(rect)
 
 
+        #ax.set_xlim(2.8,-2.2)
+        #ax.set_ylim(-2.8,2.1)
         ax.set_xlim(2.8,-2.2)
         ax.set_ylim(-2.8,2.1)
         ax.set_xlabel('$l$')
@@ -117,9 +119,10 @@ def plot_grid_map(map_data,lb=True,func=do_nothing,axis=7,cb_label=r'$A(K)$',pat
 
 if __name__=='__main__':
 
-    test_map = read_map('maps/map_PSF_2017_2.map')
-    
-    while True:
-        ipdb.set_trace()
-        plot_grid_map(test_map,func=A_K,axis=16,figname='MagForUKIRT_PSF_2017.pdf')#[:1000])
-        #plot_grid_map(test_map,func=A_K,axis=7)#[:1000])
+    #test_map = read_map('maps/map_PSF_2017_2.map')
+    test_map = read_map('../data/gonz/gonzData.dat')
+
+    ipdb.set_trace()
+    #plot_grid_map(test_map,func=A_K,axis=16,figname='MagForUKIRT_PSF_2017.pdf')#[:1000])
+    plot_grid_map(test_map,func=do_nothing,axis=4,figname='gonzMapAll.png')#[:1000])
+    #plot_grid_map(test_map,func=A_K,axis=7)#[:1000])
