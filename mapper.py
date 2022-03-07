@@ -89,6 +89,29 @@ class map:
 
         return
 
+
+    def load_grid(self,filepath='../data/gonz/gonzData.dat', racol=0, deccol=1, lcol=2, bcol=3):
+        """
+        Loads a grid from a predefined set of points.
+
+        Column args take in the number the column appears in the data file
+        where the first column is indexed as 0.
+        """
+
+        #Create array for the pixel centers
+        self.grid_pixel_centers = []
+
+        ipdb.set_trace()
+        #Load datafile with coordinates
+        map_data = np.genfromtxt(filepath,delimiter=',').tolist()
+
+        #Appending locations to pixel centers
+        for i in range(len(map_data)):
+            self.grid_pixel_centers.append([map_data[i][racol], map_data[i][deccol], \
+                map_data[i][lcol], map_data[i][bcol]])
+
+        return
+
     
     def filter_grid(self):
         npixels = 0
@@ -409,12 +432,14 @@ if __name__=='__main__':
     #ipdb.set_trace()
     test_map = map(year=pram.year,edge_length=pram.arcmin/60.)#,ra_lims=[269,280],dec_lims=[-31,-26])#,ra_lims=[268.75,289.25],dec_lims=[-29.75,-29.25])
     test_map.get_fields_stats()
-    test_map.gen_grid()
+    #test_map.gen_grid()
+    test_map.load_grid()
     test_map.filter_grid()
     #Converting inputs to strings so file name is automatically adjusted for inputs
     yearstr = str(pram.year)
     aminedge = str(pram.arcmin)
-    filename = 'map_'+pram.phot+'_'+yearstr+'_'+aminedge
+    #filename = 'map_'+pram.phot+'_'+yearstr+'_'+aminedge
+    filename = 'map_'+pram.phot+'_'+yearstr+'_'+aminedge+'_gonzGrid'
     #filename = 'inve_guess_2017_2'
     #ipdb.set_trace()
     test_map.fit_map(filebase=filename,plotmag=False,checkpix=True)
