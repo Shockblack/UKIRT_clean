@@ -19,11 +19,16 @@
 #                file writing to its own function.
 #                Changed delimiter in file to ',' rather
 #                than spaces.
+#   19-Mar-2022: Added function to make the Gonzalez data
+#                file coordinates line up with UKIRT
+#                coords and export to different file.
 #-------------------------------------------------------
 
 # Importing necessary packages and files
+from email import header
 import numpy as np #cause you know, numpy
 import ipdb #For error testing
+import pandas as pd #Used to create comparison file
 
 # Importing astropy to calculate ra and dec
 # This is to make gonz data file a bit easier to use
@@ -112,13 +117,57 @@ class gonzDat:
         
         fileout.close()
 
+    def compare_map(self, map1='../data/gonz/gonzData.dat', map2='maps/map_PSF_2017_2_gonzGrid.map', \
+                    l_axis = 2, b_axis = 3, fileout='gonzDataScaled.dat'):
+        """
+        Takes the data from two seperate maps and compares
+        their galactic locations to scale the map files to be of same length. 
+        Saves this new data as a seperate csv file. Check function to
+        make sure pd.read_csv has the correct kwargs for files using.
 
+        Code inspirations and techniques used:
+        https://moonbooks.org/Articles/How-to-delete-rows-with-values-below-and-above-a-minimum-and-maximum-value-in-a-pandas-data-frame-/
+        https://stackoverflow.com/questions/62519791/finding-duplicates-in-two-dataframes-and-removing-the-duplicates-from-one-datafr
+        https://stackoverflow.com/questions/17978133/python-pandas-merge-only-certain-columns
+
+        Dependencies
+        ------------
+        pandas
+
+        Parameters
+        ----------
+        map1 : string
+            Filepath of 'larger' map data to be edited.
+        map2 : string
+            Filepath of map to have locations matched to.
+        l_axis : int
+            Axis on map1 where l data is located.
+        b_axis : int
+            Axis on map1 where b data is located.
+        fileout : string
+            Name of file resulting data to be outputted to.
+            Goes to default location of self.path if a seperate
+            path is not specified.
+        """
+
+        #Loads both the map files
+        comp_map = pd.read_csv(map2,header=None)
+        large_map = pd.read_csv(map1,skiprows=1, header=None)
+
+        # Only keeps values of larger map which have the same location as the smaller/comparison map
+        large_map = pd.merge(large_map, comp_map[[l_axis,b_axis]], on=[l_axis,b_axis], how='inner')
+
+        # Organizes the map by decreasing l and b values
+        large_map = large_map.sort_values(by=[l_axis,b_axis], ascending=False)
+        
+        # saves map to csv file, doesn't include header
+        large_map.to_csv(self.path+fileout, header=False, index=False)
 
 
 if __name__=='__main__':
 
-    ipdb.set_trace()
     gonz = gonzDat() #Initiates class. Edit 'path' and 'filename' parameters to change path
     gonz.calcRaDec()
     gonz.calcAK()
     gonz.writeFile()
+    gonz.compare_map()
