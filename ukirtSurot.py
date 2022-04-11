@@ -28,7 +28,7 @@ import numpy as np
 import parameters as pram
 
 class cmd:
-    def __init__(self, ra, dec, l=None, b=None, year = pram.year, edge_length=0.25) -> None:
+    def __init__(self, ra, dec, l=None, b=None, year = pram.year, edge_length=0.25):
 
         self.ra = ra
         self.dec = dec
@@ -122,90 +122,165 @@ class cmd:
             # Makes sure we only obtain fields of same observing year
             if int(self.fieldData[i]["year"]) == int(self.year):
 
-                # This loop will gather the location of fields that the pixel 
-                # lies within.
+                """
+                This loop will gather the location of fields that the pixel 
+                lies within. It checks that its location is within the min
+                and max of each subfield, then append the index of said field
+                into a list of indices for field locations.
+                """
+
+
+
                 return
             return
 
         return
 
     def getStars(self,skip_read=False,limit_dict=None):
+        """Function which creates dictionaries of stars which fall under
+        the given field ranges. Returns one dictionary which is all the 
+        stars in the given field then one for all the stars that pass the
+        filter checks.
 
+        Parameters
+        ----------
+        skip_read : bool, optional
+            If True, skips reading in data and checking for correct primary bands.
+            Defaults to False
+        limit_dict : dict, optional
+            A dictionary containing filters on any key found within the stellar
+            data. Keys of limit_dict must match keys found in the data files
+            and provide lower and upper bound ranges. Primary filters include on 
+            number of stars or the magnitude of stars.
+            Ex: limit_dict = {'altmag':[12.16],'N':[10,1e6]}
+            Defaults to None
 
-        # Creates an empty limit dictionary if none given
+        Returns
+        -------
+        allStarDict : dict
+            Dictionary of all stars within the field range, no filters applied.
+        filterStarDict : dict
+            Dictionary of all stars which pass the filter checks and within the field range.
+        """
+
+        # If no limit filter dictionary is given, creates an empty one
         if type(limit_dict)==type(None):
                 limit_dict = {}
 
         if not skip_read:
-        #for each field found in raw field search
+        
+            # Creates an empty list which will hold all the dictionaries of stellar data
+            # of the fields found in self.raw_field_inds. This is not the list
+            # of stars to be used in the fit, but every star in the given fields.
             dict_list = []
-            for i in raw_field_inds:
 
+            # Loops over each field found to contain stars in the ra and dec range
+            # given by the findfields() function. Stored in self.raw_field_inds
+            for i in self.raw_field_inds:
+
+                # Appending the dictionary list with all the stellar data
                 dict_list.append(np.load('../data/ukirt/2017/psfpickles/altBandCrossCheck_'+pram.phot+self.fieldData[i]['year'] \
                     +'_'+self.fieldData[i]['field']+'_'+self.fieldData[i]['ccd']+'.npy',allow_pickle=True).item())
 
+                # Below is a check to make sure out primary band is always the H-band and that the secondary is K.
+                # That is, we want to check if 'mag' is H and if 'altmag' is K.
 
-                #going to put a check to make sure we are consistent with which 'mag' and 'altmag' refer to H and K. 
-                #H is always primary, K is always alt
-                #this is a bit cludgy, but couldn't think of a more graceful way 
             for i in range(len(dict_list)):
+                # Creating a dictionary of the given iteration used to compare against
                 tdict = dict_list[i]
-                #ipdb.set_trace()
-                #need to add catch if 'delta' key is not present
+
+                # Checking if the 'delta' key is not present and adding it in if that's the case.
                 if 'delta' not in tdict.keys():
                     tdict['delta'] = tdict['mag'] - tdict['altmag']
-                #if the name of the first entry has _K_, then K is the primary band.
-                #we want to switch these
+                
+
+                # If the name of the first entry has _K_, then K is the primary band.
+                # We want to switch these if that is the case so that H is primary.
                 if '_K_' in tdict[list(tdict.keys())[0]][0]:
+
+                    # Creates a temporary dictionary for restructuring
                     tempdict = {}
+
                     for key in tdict.keys():
-                    #the delta (K-H) is the negative of what we want(H-K), so fix that
+
+                        # If K is primary band, then delta (K-H) is the negative of the delta (H-K) which we want.
                         if key == 'delta':
                             tempdict[key] = -tdict[key]
-                    #these are fine as is, so just copy
+
+                        # These are fine as is, so just copy over.
                         elif key == 'error' or key == 'offset':
                             tempdict[key]=tdict[key]
-                    #if 'alt' is not in the key it corresponds to K, so we want that as 'alt'+key
+
+                        # If the prefix "alt" is not in the key then it corresponds to the K band.
+                        # We want to flip this so that K IS the alt band by adding "alt" before each key.
                         elif 'alt' not in key:
                             tempdict['alt'+key]=tdict[key]
-                    #otherwise, 'alt'+key is the H-band value and we want that as just key
-                    #here, 'altname'[3:] is just 'name', the slice removes the preceeding 'alt'
+
+                        # This means that everything left is 'alt'+key, which here corresponds to the H-band values.
+                        # We want this to be just key, without the 'alt.' To do this we grab all the remaining keys
+                        # and splice the string name so that the first 3 letters 'alt' get removed.
                         else:
                             tempdict[key[3:]]=tdict[key]
-                #ipdb.set_trace()
-                #put this tempdict at the entry
+                
+                        # Set the temporary dictionary dict as the entry
                         dict_list[i]=tempdict
 
+            # Here the dictionary lists are restructured. Instead of being a list of dictionaries,
+            # this will turn it into a dictionary of lists. This line below creates the "framework"
+            # for the dictionary by pulling the first entry of the dict_list[0] so that the keys
+            # are already in place.
             all_dict = dict_list[0]
+
+            # Creates a range to loop over all the stars excluding the first one. The -1 in the arange
+            # after the len() makes it 1 item shorter. The +1 after the arange adds 1 to every
+            # value in the arange, essentially making it start 1 index later.
             for i in np.arange(len(dict_list)-1)+1:
+                # Loops over all keys
                 for key in all_dict.keys():
+                    # Appends the dictionary key with the value of the next datapoint of the i-th star
                     all_dict[key]=np.append(all_dict[key],dict_list[i][key])
 
-        #ipdb.set_trace()
-        good_ra_high = all_dict['RA']<=ra_max 
-        good_ra_low = all_dict['RA']>=ra_min
-        good_ra_inds = good_ra_low & good_ra_high 
-        good_dec_high = all_dict['Dec']<=dec_max 
-        good_dec_low = all_dict['Dec']>=dec_min
+        # Gathers the indices for all stars within the RA and DEC range.
+        good_ra_high = all_dict['RA']<=self.ra_max 
+        good_ra_low = all_dict['RA']>=self.ra_min
+        good_ra_inds = good_ra_low & good_ra_high
+
+        good_dec_high = all_dict['Dec']<=self.dec_max 
+        good_dec_low = all_dict['Dec']>=self.dec_min
         good_dec_inds = good_dec_low & good_dec_high 
-        #good_dec_inds = all_dict['DEC']<=dec_max and all_dict['DEC']>=dec_min
+        
         good_coord_inds = good_ra_inds & good_dec_inds
 
-        #find which catalog entries have all conditions met
-        #we will loop through each key and apply that filter, combining with a logical 'and'
-        filt_dict = {}
+        # Need to find entries which pass all conditions. Will loop through each key, applying
+        # the filter and adjusting the "good indices" for each.
+
+        # Creating empty filtered star dictionary
+        filt_dict = {} 
+        # Starting off with our good indices being those within coord range
         good_inds = good_coord_inds
+        # Looping over all keys
         for key in all_dict.keys():
+
+            # Checks if the specified key is within our limiting filter dictionary.
             if key in limit_dict.keys():
-                #ipdb.set_trace()
+
+                # Gathers indices where the stars in the dictionary pass the filter.
                 low_inds = all_dict[key]>=limit_dict[key][0]
                 high_inds = all_dict[key]<=limit_dict[key][1]
+
+                # Gathers all elements that don't have "nan" entries
                 try:
+                    # Returns False if 'nan' and True if not, basically opposite of Numpy.isnan
                     nan_inds = not (np.isnan(all_dict[key]))
                 except:
+                    # If there are no 'nan' values, return a list of all True
                     nan_inds = np.ones(len(all_dict[key]),dtype=bool)
                     pass
+
+                # Uses logical 'and' to gather all indices that have passed checks
                 good_inds = good_inds & low_inds & high_inds & nan_inds
+
+            # If no filter key, just checks for 'nan' same way as above
             else:
                 try:
                     good_inds = good_inds & (not np.isnan(all_dict[key]))
@@ -213,12 +288,14 @@ class cmd:
                     nan_inds = np.ones(len(all_dict[key]),dtype=bool)
                     good_inds = good_inds & nan_inds
                     pass
+        
+        # Appends our filtered dictionary with values in 'good_inds'
         for key in all_dict.keys():
             filt_dict[key] = all_dict[key][good_inds]
         allStarDict = all_dict
         filterStarDict = filt_dict
 
-
+        # Returns the dictionaries
         return allStarDict, filterStarDict
 
 
