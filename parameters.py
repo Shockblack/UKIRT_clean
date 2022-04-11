@@ -2,7 +2,7 @@
 #Allows for streamlining of changes across multiple files
 
 #defining the arcminutes used for the run (pixel size is arcmin/60)
-arcmin = 1.5
+arcmin = 2
 
 year = 2017
 #year = 2018
