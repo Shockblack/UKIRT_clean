@@ -1,8 +1,8 @@
-#-------------------------------------------------------
+#-----------------------------------------------------------------------
 # File name: ukirtSurot.py
 # 
-# Attempts to organize fields by ccd location to create
-# larger scale cmds for completeness correction.
+# Attempts to organize fields by ccd location to create larger scale cmds
+# for completeness correction. Implementing Surot et al. 2020 methods.
 #
 # Programmer: Aiden Zelakiewicz (zelakiewicz.1@osu.edu)
 #
@@ -14,12 +14,14 @@
 #   21-Mar-2022 :   File created.
 #   28-Mar-2022 :   Fixed double correcting the angle.
 #   04-Apr-2022 :   Wrapped code into class
-#-------------------------------------------------------
+#   11-Apr-2022 :   Greatly improved documentation on Getstars and added
+#                   some other functions.
+#   17-Apr-2022 :   Implementation of finding fields/subfields locations
+#-----------------------------------------------------------------------
 
 #Importing all necessary packages
 import os
 import pickle
-import ipdb
 import matplotlib.pyplot as plt
 import matplotlib.patches as pat
 from astropy import coordinates as coord
@@ -28,7 +30,7 @@ import numpy as np
 import parameters as pram
 
 class cmd:
-    def __init__(self, ra, dec, l=None, b=None, year = pram.year, edge_length=0.25):
+    def __init__(self, ra=None, dec=None, l=None, b=None, year = pram.year, edge_length=0.25, findvec = False, fieldType = 'field', field_ind=0):
 
         self.ra = ra
         self.dec = dec
@@ -45,16 +47,54 @@ class cmd:
         self.year = year
         self.edge_length = edge_length
 
+        self.findvec = findvec
+        self.fieldType = fieldType
+
         # Obtaining the UKIRT field positions
         self.fieldData = self.readUKIRTfields()
 
-        self.raw_field_inds = self.findFields(year=self.year, plot_fields=False)
+        # Checks if we are finding the reddening vector
+        if self.findvec == True:
 
-        pass
+            # Retrieve list of Field/Subfield locations
+            self.fieldRange = self.fieldLocations()
 
-    def readUKIRTfields(self, filename='ukirtFieldLocations.sav',
-                        dir='fieldLocations/'):
+            # Extract ra/dec min/max values for specific field denoted by
+            # field_ind where the integer corresponds with the value of field
+            # which can be found in the figures 'ukirt_subfieldgrid_2017.pdf'
+            # or 'ukirt_fieldgrid_2017.pdf' in the 'figs/' folder by default.
+            self.ra_min = self.fieldRange[field_ind][1]
+            self.ra_max = self.fieldRange[field_ind][2]
+            self.dec_min = self.fieldRange[field_ind][3]
+            self.dec_max = self.fieldRange[field_ind][4]
 
+            self.raw_field_inds = self.findFields(year=2017,plot_fields=False)
+            
+        else:
+            self.ra_max = self.ra+self.edge_length/2.
+            self.ra_min = self.ra-self.edge_length/2.
+            self.dec_max = self.dec+self.edge_length/2.
+            self.dec_min = self.dec-self.edge_length/2.
+
+            self.raw_field_inds = self.findFields(year=2017,plot_fields=False)
+        
+
+    def readUKIRTfields(self, filename='ukirtFieldLocations.sav', dir='fieldLocations/'):
+        """Reads in the field data for the United Kindgon InfraRed Telescope to give
+        a list of dictionaries containing the field data.
+
+        Parameters
+        ----------
+        filename : str, optional
+            Name of the .sav file hosting the data, by default 'ukirtFieldLocations.sav'
+        dir : str, optional
+            Directory where the file is located, by default 'fieldLocations/'
+
+        Returns
+        -------
+        fieldData : list
+            List of dictionaries which contains each subfield and all its corresponding information.
+        """
         if not os.access(dir+filename, os.R_OK):
             exit('ERROR: no file with CCD locations')
 
@@ -62,6 +102,7 @@ class cmd:
         fieldData = pickle.load(infile,encoding='latin1')
 
         return fieldData
+    
     #Probably not needed anymore...
     def calc_angle(self, ramin,decmin,ramax,decmax, edgelength = 54.4/60.):
 
@@ -81,9 +122,25 @@ class cmd:
     
 
     def getCCDlocation(self,field,ccd,year=pram.year):
-    
+        """Function which gives the RA and DEC minimum and maximum values for a specific ccd.
+        See fieldLocations/ukirtFieldLocations.txt for labeling of the fields.
+
+        Parameters
+        ----------
+        field : string
+            The label for interested field.
+        ccd : string
+            Desired ccd, labeled 1 through 4.
+        year : string, optional
+            String for the year of desired observation period, by default pram.year
+
+        Returns
+        -------
+        _type_
+            _description_
+        """
         # Each ccd has fov of 13.6'x13.6', so each field has 54.4'x54.4'
-        ipdb.set_trace()
+        
         for pos in self.fieldData:
             if pos['year']==str(year) and \
                 pos['field']==field and \
@@ -96,45 +153,129 @@ class cmd:
                 return RAmin,RAmax,DECmin,DECmax
         exit('ERROR: year/field/ccd not found in CCD location list')
 
-    def declareFields(self, dim, new_ra=None, new_dec=None):
-        """
-        Function that gives the index of fields to use based on field size.
-        This could be replace later on with a more robust and sensible version
-        which returns the fields themselves, but for now it is currently just
-        being made to adapt to the old CMD code.
 
-        In its current form, it takes the dimension of the field size 
+    def fieldLocations(self):
+        """
+        Generates the minimum and maximum RA and DEC values for the fields or
+        subfields when finding the reddening vector.
+
+        Returns
+        -------
+        fieldRange : list
+            List containing the index of field including min and max values.
         """
 
+        fieldData = []
+
+        # Creates and appends new list to hold only data in our observation year
+        newfieldData = []
+        for i in range(len(self.fieldData)):
+            if int(self.fieldData[i]["year"]) == int(self.year):
+                newfieldData.append(self.fieldData[i])
+
+        if self.fieldType == 'field':
+            # This takes the field generated by all four ccd's in all 4 positions
+            fieldData = [newfieldData[i:i+16] for i in range(0, len(newfieldData), 16)]
+
+        elif self.fieldType == 'subfield':
+            # Takes the subfield made by combining one location from each ccd
+            tempfield = [newfieldData[i:i+16] for i in range(0, len(newfieldData), 16)]
+            for field in tempfield:
+                for i in range(0,4,1):
+                    # Grabs every 4th field
+                    fieldData.append(list(np.array(field)[[i,i+4,i+8,i+12]]))
+
+        else:
+            exit("ERROR: Invalid field type or no field type selected.")
+        
+        # Restructuring
+        ordered_fields = []
+
+        for dict_list in fieldData:
+
+            # Creates a dictionary with the framework of the first entry
+            all_dict=dict_list[0]
+
+            for i in np.arange(len(dict_list)-1)+1:
+                # Loops over all keys
+                for key in all_dict.keys():
+                    # Appends the dictionary key with the value of the next datapoint of the i-th star
+                    all_dict[key]=np.append(all_dict[key],dict_list[i][key])
+            
+            ordered_fields.append(all_dict)
+
+        # List which will hold field number and min/max values
+        fieldRange = []
+        
+        for i in range(len(ordered_fields)):
+
+            # Calculating the min and max values 
+            ramin = np.amin(ordered_fields[i]['RAmin'])
+            ramax = np.amax(ordered_fields[i]['RAmax'])
+            decmin = np.amin(ordered_fields[i]['DECmin'])
+            decmax = np.amax(ordered_fields[i]['DECmax'])
+
+            # Putting into the list
+            fieldRange[i]=[i,ramin,ramax,decmin,decmax]
+
+        return fieldRange
+
+
+    def findFields(self,year=pram.year,new_ra=None,new_dec=None,plot_fields=True):
+        """Gives the indexes of fields from the fieldData list of UKIRT fields for which
+        our CMD will use. It does so by checking the range of coordinates for each field and
+        seeing if our desired location lands within it.
+
+        Parameters
+        ----------
+        year : int, optional
+            Observation year, by default pram.year
+        new_ra : float, optional
+            New ra value to update with, by default None
+        new_dec : float, optional
+            New dec value to update with, by default None
+
+        Returns
+        -------
+        raw_field_inds : list
+            List of indices which the pixel lands in.
+        """
+
+        # Checks if new RA and DEC coords were given
         if new_ra == None and new_dec == None:
             ra_max = self.ra_max
             ra_min = self.ra_min
             dec_max = self.dec_max
             dec_min = self.dec_min
         else:
+            # Calculates max and min if new coords given
             ra_max = new_ra + self.edge_length/2.
             ra_min = new_ra - self.edge_length/2.
             dec_max = new_dec + self.edge_length/2.
             dec_min = new_dec - self.edge_length/2.
-
+        
+        # Creates empy list
+        raw_field_inds = []
         for i in range(len(self.fieldData)):
 
-            # Makes sure we only obtain fields of same observing year
-            if int(self.fieldData[i]["year"]) == int(self.year):
+            # Make sure we use the year we want
+            if int(self.fieldData[i]['year'])==int(year):
+                
+                # Checks if the field lies within the RA range
+                if (ra_min<=self.fieldData[i]['RAmax'] and ra_min>=self.fieldData[i]['RAmin']) or \
+                        (ra_max<=self.fieldData[i]['RAmax'] and ra_max>=self.fieldData[i]['RAmin']) or\
+                        (ra_max>=self.fieldData[i]['RAmax'] and ra_min<=self.fieldData[i]['RAmin']):
 
-                """
-                This loop will gather the location of fields that the pixel 
-                lies within. It checks that its location is within the min
-                and max of each subfield, then append the index of said field
-                into a list of indices for field locations.
-                """
+                    # Checks if the field lies in the DEC range after confirming it's in RA range.
+                    if (dec_min<=self.fieldData[i]['DECmax'] and dec_min>=self.fieldData[i]['DECmin']) or \
+                            (dec_max<=self.fieldData[i]['DECmax'] and dec_max>=self.fieldData[i]['DECmin']) or \
+                            (dec_max>=self.fieldData[i]['DECmax'] and dec_min<=self.fieldData[i]['DECmin']):
+                    
+                        # Append the fieldData index i to our list
+                        raw_field_inds.append(i)
+                        
+        return raw_field_inds
 
-
-
-                return
-            return
-
-        return
 
     def getStars(self,skip_read=False,limit_dict=None):
         """Function which creates dictionaries of stars which fall under
@@ -300,15 +441,4 @@ class cmd:
 
 
 if __name__ == '__main__':
-    rmin, rmax, dmin, dmax = cmd.getCCDlocation('s5_2', '3')
-    print((rmax-rmin))
-    print(dmax-dmin)
-
-    fig, ax = plt.subplots()
-    ax.plot(rmin,dmin,'.')
-    angle = cmd.calc_angle(rmin,dmin,rmax,dmax)
-    #rect = pat.Rectangle((rmin,dmin),rmax-rmin,dmax-dmin, angle=-29.97272723566587, facecolor='none',linewidth=1,edgecolor='C0')
-    rect = pat.Rectangle((rmin,dmin),rmax-rmin,dmax-dmin, facecolor='none',linewidth=1,edgecolor='C0')
-    ax.add_patch(rect)
-    ax.set_aspect("equal")
-    plt.show()
+    print('hi')
