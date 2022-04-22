@@ -23,7 +23,9 @@
 #   17-Apr-2022 :   Implementation of finding fields/subfields locations
 #   18-Apr-2022 :   Added __init__ documentation
 #   20-Apr-2022 :   Fixed bug where lists were linking, first successful
-#                   run. Renamed file to createCMD.py
+#                   run. Renamed file from ukirtSurot.py to createCMD.py
+#   21-Apr-2022 :   Starts reddening vector calculation
+#   22-Apr-2022 :   Finished reddening vector function.
 #-----------------------------------------------------------------------
 
 #Importing all necessary packages
@@ -31,8 +33,10 @@ import os
 import pickle
 from astropy import coordinates as coord
 from astropy import units as u
+from matplotlib.pyplot import hist
 import numpy as np
 import parameters as pram
+import ipdb
 
 class cmd:
     def __init__(self, ra=None, dec=None, l=None, b=None, year = pram.year, edge_length=0.25, findvec = False, fieldType = 'field', field_ind=0):
@@ -50,7 +54,7 @@ class cmd:
             The declination of the pixel center, by default None
         l : float, optional
             The galactic longitude of the pixel center, by default None
-        b : latitude, optional
+        b : float, optional
             The galactic latitude of the pixel center, by default None
         year : int, optional
             The year of desired observation period, by default pram.year
@@ -110,8 +114,9 @@ class cmd:
             self.b = b
             
             self.raw_field_inds = self.findFields(plot_fields=False)
+            self.limit_dict = {'altMAD':[-0.1,0.1], 'MAD':[-0.1,0.1]}
             #self.limit_dict = {'offset':[-0.1,0.1]}
-            self.limit_dict={}
+            #self.limit_dict={}
             self.cm_dict = {}
             
         else:
@@ -556,20 +561,21 @@ class cmd:
 
 
     def updateCMD(self,new_ra,new_dec,l=None,b=None):
-        """_summary_
+        """Updates the cmd if location changes in calculations.
 
         Parameters
         ----------
-        new_ra : _type_
-            _description_
-        new_dec : _type_
-            _description_
-        l : _type_, optional
-            _description_, by default None
-        b : _type_, optional
-            _description_, by default None
+        new_ra : float, optional
+            New ra value to update with, by default None
+        new_dec : float, optional
+            New dec value to update with, by default None
+        l : float, optional
+            The galactic longitude of the pixel center, by default None
+        b : float, optional
+            The galactic latitude of the pixel center, by default None
         """
-        #set fundamental box properties, center and length of box
+
+        # Set fundamental box properties, center and length of box
         self.ra = new_ra
         self.dec = new_dec
         if type(l)==type(None) or type(b)==type(None):
@@ -578,29 +584,113 @@ class cmd:
             b = c.galactic.b.degree
         self.l = l
         self.b = b
-        #self.edge_length = edge_length
-        #self.year=year
         
-        #set the upper and lower limits for our box in ra and dec
+        # Set the upper and lower limits for our box in ra and dec
         self.ra_max = self.ra+self.edge_length/2.
         self.ra_min = self.ra-self.edge_length/2.
         self.dec_max = self.dec+self.edge_length/2.
         self.dec_min = self.dec-self.edge_length/2.
-
-        #read in the field data
-        #self.fieldData = readUKIRTfields()
         
+        # Gathers fields and gets stars within them, performing cuts
         self.raw_field_inds = self.findFields()
-        #self.limit_dict = {'N':[10,1e6],'altN':[3,1000]}# {'mag':[12,15]}
         self.getStars(skip_read=True,limit_dict=self.limit_dict)
-        #self.cm_dict = {'altmag':[12,16],'delta':[-1,5]}
         self.color_mag_cut(self.cm_dict,percentile_cut=True)
         self.histMag(plot=False)
         
         print('CMD updated!')
 
 
+    def calcReddeningVec(self, limit_dict=None):
+
+
+        # Creating a dictionary which will house the our suspected RC stars
+        RC_dict = {}
+        
+        # Starting off with our good indices being those within coord range
+        good_inds = np.ones(len(self.filterStarDict['RA']),dtype=bool)
+
+        # Looping over keys
+        for key in self.filterStarDict.keys():
+
+            # Checks if the specified key is within our limiting filter dictionary.
+            if key in limit_dict.keys():
+
+                # Gathers indices where the stars in the dictionary pass the filter.
+                low_inds = self.filterStarDict[key]>=limit_dict[key][0]
+                high_inds = self.filterStarDict[key]<=limit_dict[key][1]
+
+                # Gathers all elements that don't have "nan" entries
+                try:
+                    # Returns False if 'nan' and True if not, basically opposite of Numpy.isnan
+                    nan_inds = not (np.isnan(self.filterStarDict[key]))
+                except:
+                    # If there are no 'nan' values, return a list of all True
+                    nan_inds = np.ones(len(self.filterStarDict[key]),dtype=bool)
+                    pass
+
+                # Uses logical 'and' to gather all indices that have passed checks
+                good_inds = good_inds & low_inds & high_inds & nan_inds
+
+            # If no filter key, just checks for 'nan' same way as above
+            else:
+                try:
+                    good_inds = good_inds & (not np.isnan(self.filterStarDict[key]))
+                except:
+                    nan_inds = np.ones(len(self.filterStarDict[key]),dtype=bool)
+                    good_inds = good_inds & nan_inds
+
+        # Appends our filtered dictionary with values in 'good_inds'
+        for key in self.filterStarDict.keys():
+            RC_dict[key] = self.filterStarDict[key][good_inds]
+
+        # Here we take the density of points and find where it is max
+        # This is done by splicing the 2-D space into a bunch of slices
+        # and creating a histogram for each slice, finding the peak of each.
+        # The (H-K) color and mag K is saved for each peak to a list of points
+        # to be used for the fit.
+
+        # Splitting the boxed area in cmd-space to make histograms in each color line
+        histLocations = np.linspace(limit_dict['delta'][0], limit_dict['delta'][1], 50)
+        # Width of bins
+        width = abs(histLocations[0]-histLocations[1])
+        # Empty dictionary for the fit data
+        vecFitList = {'delta':[],'altmag':[]}
+        
+        # Loops over each of these color lines
+        for xbin in histLocations:
+            # Resets the good indices
+            good_inds = np.ones(len(RC_dict['RA']),dtype=bool)
+
+            # temporary dictionary
+            tempDict = {'delta':[],'altmag':[]}
+
+            # Sees if the values are within the bin range and limits indices to those
+            low_inds = RC_dict['delta']>=xbin
+            high_inds = RC_dict['delta']<=(xbin+width)
+            good_inds = good_inds & low_inds & high_inds
+
+            # Adds points to the temp dict for each key
+            for key in tempDict.keys():
+                tempDict[key] = RC_dict[key][good_inds]
+
+            # Calculates the histogram
+            hist, bin_edges = np.histogram(tempDict['altmag'], bins=50)
+
+            # Gets index of maximum histogram value and gets value of magnitude at max
+            index = np.argmax(hist)
+            maxDensity = (bin_edges[index]+bin_edges[index+1])/2
+            # Adds color and magnitude to fit list
+            vecFitList['delta'].append(xbin)
+            vecFitList['altmag'].append(maxDensity)
+            
+        # Fits a line to the max density points
+        coeffs = np.polyfit(vecFitList['delta'],vecFitList['altmag'],1)
+        self.vecFitList = vecFitList
+        # Returns the coefficients
+        return coeffs
+
 if __name__ == '__main__':
-    cmd_test = cmd(findvec=True, fieldType='field', field_ind=0)
-    
-    print('hi')
+    cmd_test = cmd(findvec=True, fieldType='subfield', field_ind=24)
+    rc_dict={'altmag':[12, 16], 'delta':[1.0, 2.0], 'altMAD':[-0.1,0.1], 'MAD':[-0.1,0.1]}
+    coeffs = cmd_test.calcReddeningVec(rc_dict)
+    print(coeffs[0])
