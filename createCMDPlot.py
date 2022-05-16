@@ -114,10 +114,10 @@ def plotDensityCMD(cmd,limit_dict=None, plotvec=False, coeffs=None, savefig=Fals
 
 if __name__ == '__main__':
     # Creates the cmd_test object and dictionary for vector calculating
-    cmd_test = createCMD.cmd(findvec=True, field_ind=24, fieldType='subfield')
     rc_dict={'altmag':[12, 15.5], 'delta':[1.0, 2.0], 'altMAD':[-0.1,0.1], 'MAD':[-0.1,0.1]}
+    cmd_test = createCMD.cmd(findvec=True, field_ind=24, fieldType='subfield',rc_dict=rc_dict)
+    
     # Calls the calculation to find the reddening vector
-    coeffs = cmd_test.calcReddeningVec(rc_dict)
-    print("The reddening vector is: " + str(coeffs[0]))
+    print("The reddening vector is: " + str(cmd_test.coeffs[0]))
     # Plots the density and vector
-    plotDensityCMD(cmd_test, limit_dict=rc_dict, plotvec=True, coeffs=coeffs)
+    plotDensityCMD(cmd_test, limit_dict=rc_dict, plotvec=True, coeffs=cmd_test.coeffs)

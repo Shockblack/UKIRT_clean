@@ -39,7 +39,7 @@ import parameters as pram
 import ipdb
 
 class cmd:
-    def __init__(self, ra=None, dec=None, l=None, b=None, year = pram.year, edge_length=0.25, findvec = False, fieldType = 'field', field_ind=0):
+    def __init__(self, ra=None, dec=None, l=None, b=None, year = pram.year, edge_length=0.25, findvec = False, fieldType = 'field', field_ind=0, rc_dict={}):
         """The cmd class creates cmds at a given location. The class can be fed the location of a square area, denoted 
         as pixel, to find the cmd of or use the field and subfields themselves. The reddening vector of a given field
         or subfield is able to be calculated as well. If the reddening vector isn't being found then ra and dec
@@ -147,6 +147,9 @@ class cmd:
         
         self.getStars(limit_dict=self.limit_dict)
         self.color_mag_cut(self.cm_dict,percentile_cut=True)
+
+        self.coeffs = self.calcReddeningVec(rc_dict)
+        self.red_vec = self.coeffs[0]
 
 
     def readUKIRTfields(self, filename='ukirtFieldLocations.sav', dir='fieldLocations/'):
@@ -603,8 +606,8 @@ class cmd:
     def calcReddeningVec(self, limit_dict=None):
 
 
-        # Creating a dictionary which will house the our suspected RC stars
-        RC_dict = {}
+        # Creating a dictionary which will house our suspected RC stars
+        self.RC_dict = {}
         
         # Starting off with our good indices being those within coord range
         good_inds = np.ones(len(self.filterStarDict['RA']),dtype=bool)
@@ -641,37 +644,42 @@ class cmd:
 
         # Appends our filtered dictionary with values in 'good_inds'
         for key in self.filterStarDict.keys():
-            RC_dict[key] = self.filterStarDict[key][good_inds]
+            self.RC_dict[key] = self.filterStarDict[key][good_inds]
 
         # Here we take the density of points and find where it is max
         # This is done by splicing the 2-D space into a bunch of slices
         # and creating a histogram for each slice, finding the peak of each.
         # The (H-K) color and mag K is saved for each peak to a list of points
         # to be used for the fit.
-
+        ipdb.set_trace()
         # Splitting the boxed area in cmd-space to make histograms in each color line
-        histLocations = np.linspace(limit_dict['delta'][0], limit_dict['delta'][1], 50)
+        # Need to add 1 extra value so that last one can be cut off, since we loop using
+        # Starting location + width
+        histLocations = np.linspace(limit_dict['delta'][0], limit_dict['delta'][1], 51)
         # Width of bins
-        width = abs(histLocations[0]-histLocations[1])
+        width = round(abs(histLocations[0]-histLocations[1]), 6)
+        # Removing the last point, giving us 50 bins!
+        histLocations = histLocations[:-1]
+        
         # Empty dictionary for the fit data
         vecFitList = {'delta':[],'altmag':[]}
         
         # Loops over each of these color lines
         for xbin in histLocations:
             # Resets the good indices
-            good_inds = np.ones(len(RC_dict['RA']),dtype=bool)
+            good_inds = np.ones(len(self.RC_dict['RA']),dtype=bool)
 
             # temporary dictionary
             tempDict = {'delta':[],'altmag':[]}
 
             # Sees if the values are within the bin range and limits indices to those
-            low_inds = RC_dict['delta']>=xbin
-            high_inds = RC_dict['delta']<=(xbin+width)
+            low_inds = self.RC_dict['delta']>=xbin
+            high_inds = self.RC_dict['delta']<=(xbin+width)
             good_inds = good_inds & low_inds & high_inds
 
             # Adds points to the temp dict for each key
             for key in tempDict.keys():
-                tempDict[key] = RC_dict[key][good_inds]
+                tempDict[key] = self.RC_dict[key][good_inds]
 
             # Calculates the histogram
             hist, bin_edges = np.histogram(tempDict['altmag'], bins=50)
@@ -690,7 +698,6 @@ class cmd:
         return coeffs
 
 if __name__ == '__main__':
-    cmd_test = cmd(findvec=True, fieldType='subfield', field_ind=24)
     rc_dict={'altmag':[12, 16], 'delta':[1.0, 2.0], 'altMAD':[-0.1,0.1], 'MAD':[-0.1,0.1]}
-    coeffs = cmd_test.calcReddeningVec(rc_dict)
-    print(coeffs[0])
+    cmd_test = cmd(findvec=True, fieldType='subfield', field_ind=24, rc_dict=rc_dict)
+    print(cmd_test.coeffs[0])
