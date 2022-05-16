@@ -136,26 +136,36 @@ class mapper:
     def updateLength(self, num_bins=10):
         """Function which will adjust the number of pixels within our map until 
         there is a minimum of 20 stars within every pixel. It will raise or lower
-        the amount of points until this minimum is hit.
+        the amount of points until this minimum is hit. This takes a dimension, n, 
+        and splits the RA space into n "lines." In each of these lines, a 1D histogram
+        is applied to it using Numpy. The minimum is recorded and compared against the
+        other lines until an absolute minimum is acquired. If it is above the threshold
+        of 20 stars, the dimension is increased by 1 and ran over again. This happens
+        until the minimum drops below 20 and the dimension is recorded.
 
         Parameters
         ----------
         num_bins : int, optional
             The starting amount of pixels to begin looping over, by default 50
         """
-        # Function to obtain pixels that contain at minimum 20 stars
         
         # Set starting minimum star value so that is is global
         min_stars = 10000
+        # Adding a counter to know how many iterations it took
         counter = 0
+
+        # Looping as long as the amount of stars is 20 or greater
         while min_stars >= 20:
 
-            # Splitting the boxed area in cmd-space to make histograms in each color line
+            # Splitting the subfield's RA space into lines (bins)
+            # Need 1 extra so that we can clip last one and not go over box edge
             histLocations = np.linspace(self.cmd.ra_min, self.cmd.ra_max, num_bins+1)
             # Width of bins
             width = abs(histLocations[0]-histLocations[1])
+            # Clipping last point
             histLocations = histLocations[:-1]
-            # Loops over each of these color lines
+
+            # Loops over each of these RA lines
             for xbin in histLocations:
                 
                 # Resets the good indices
@@ -166,7 +176,7 @@ class mapper:
 
                 # Sees if the values are within the bin range and limits indices to those
                 low_inds = self.cmd.RC_dict['RA']>=xbin
-                high_inds = self.cmd.RC_dict['RA']<=(xbin+width)
+                high_inds = self.cmd.RC_dict['RA']<=(xbin+width) # This width is why we have the extra bin and clip it
                 good_inds = good_inds & low_inds & high_inds
 
                 # Adds points to the temp dict for each key
@@ -176,22 +186,25 @@ class mapper:
                 # Calculates the histogram
                 hist, bin_edges = np.histogram(tempDict['Dec'], bins=num_bins)
 
+                # Records the local minimum
                 line_min = np.amin(hist)
-
+                # Checks if it's a local min or global min
                 if line_min < min_stars:
+                    # If global min, set it to the variable
                     min_stars = line_min
+            
             print("Min Stars =",min_stars)
             print("Num bins = ",num_bins)
+            # Increase bin count and counter
             num_bins += 1
             counter += 1
-            
+        
+        # Need to remove 2 bins, since if we are less than 20, we need to remove 1 from the 
+        # addition at the end and another to go to the dimension before we dropped below.
         num_bins -= 2
         print("Program converged on ",num_bins,"x",num_bins," pixels after ",counter," iterations.")
         
-
-        ipdb.set_trace()
-
-        return
+        return num_bins
 
 
 
