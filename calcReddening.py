@@ -10,6 +10,7 @@
 #-----------------------------------------------------------------------
 
 # Importing other Python files from project
+from statistics import median
 import createCMD
 
 # Importing necessary packages
@@ -40,6 +41,8 @@ class mapper:
         # Now we must find the size/location of the fields
         # by taking the field max/min and dividing by num of pixels
         self.edge_length = abs(self.cmd.ra_max - self.cmd.ra_min) / num_pixels
+
+        self.dimension = self.findDimension()
 
 
     def getNABStars(self):
@@ -80,7 +83,31 @@ class mapper:
         # Getting the 20 stars
         self.NABStars = np.array(RC_dict_org)[ind_array][ : 20]
 
-        #NOTE Add 3 MAD cut
+        # Creating a list of colors for finding Median Absolute Deviation (MAD)
+        color_array = []
+        for star in self.NABStars:
+            color_array.append(star['delta'])
+        
+        #color_array = np.array(color_array)
+        
+        # Now we calculate the MAD and remove any
+        # stars with color 3 MAD away from the median
+        median_color = np.median(color_array)
+        abs_difference = np.absolute(np.array(color_array) - median_color)
+        self.mad = np.median(abs_difference)
+        
+        # Finding indices of stars 3 MAD away
+        bad_ind = []
+        # Looping over all stars
+        for i in range(len(color_array)):
+            # Checking if 3 MAD away
+            if np.abs(color_array[i]-median_color) > 3*self.mad:
+                # Appending bad index
+                bad_ind.append(i)
+        
+        # Deleting the stars over 3 MAD away
+        self.NABStars = np.delete(self.NABStars, bad_ind)
+
 
     def calcWeights(self):
 
@@ -133,7 +160,7 @@ class mapper:
         self.reddening = color - 0.09
         print(self.reddening)
 
-    def updateLength(self, num_bins=10):
+    def findDimension(self, num_bins=10):
         """Function which will adjust the number of pixels within our map until 
         there is a minimum of 20 stars within every pixel. It will raise or lower
         the amount of points until this minimum is hit. This takes a dimension, n, 
@@ -147,6 +174,12 @@ class mapper:
         ----------
         num_bins : int, optional
             The starting amount of pixels to begin looping over, by default 50
+
+        Returns
+        -------
+        dimension : int
+            The final dimension the subfield is broken up into. The amount of pixels
+            used is therefore dimension * dimension.
         """
         
         # Set starting minimum star value so that is is global
@@ -201,12 +234,52 @@ class mapper:
         
         # Need to remove 2 bins, since if we are less than 20, we need to remove 1 from the 
         # addition at the end and another to go to the dimension before we dropped below.
-        num_bins -= 2
-        print("Program converged on ",num_bins,"x",num_bins," pixels after ",counter," iterations.")
+        dimension = num_bins - 2
+        print("Program converged on ",dimension,"x",dimension," pixels after ",counter," iterations.")
         
-        return num_bins
+        return dimension
 
+    def pixelInfo(self, dimension=None):
 
+        if type(dimension) == None:
+            dimension = self.dimension
+        
+        # Creating the dictionary to house the pixel info
+        self.pixel_data = {'RA' : [], 'Dec' : [], 'ra_max' : [], 'ra_min' : [], 'dec_max' : [], 'dec_min' : [], \
+            'reddening' : [], 'extinction' : [], }
+
+        # Splitting field into the pixels
+        
+        # Doing RA
+        rabins = np.linspace(self.cmd.ra_min, self.cmd.ra_max, dimension+1)
+        rabins = rabins[:-1]
+
+        # and Dec
+        decbins = np.linspace(self.cmd.dec_min, self.cmd.dec_max, dimension+1)
+        decbins = decbins[:-1]
+
+        # Start looping over RA and Dec space
+        # Begin with dec first
+        for i in range(len(decbins)):
+            # Assign one edge of bin
+            dec_min = decbins[i]
+            # Set other edge to either next bin or the max value of field if last point
+            if i == dimension-1:
+                dec_max = self.cmd.dec_max
+            else:
+                dec_max = decbins[i+1]
+            # Start looping over ra
+            for k in range(len(rabins)):
+                # Using one edge of bin
+                ra_min = rabins[k]
+                # Same thing, checking for edge case
+                if k == dimension-1:
+                    ra_max = self.cmd.ra_max
+                else:
+                    ra_max = rabins[i+1]
+                
+
+        return
 
 if __name__ == "__main__":
     field_ind = 21
@@ -217,4 +290,4 @@ if __name__ == "__main__":
     map.calcWeights()
     map.calcReddening()
     print("Extinction = ", map.reddening*cmd_test.red_vec)
-    map.updateLength()
+    map.findDimension()
