@@ -651,7 +651,7 @@ class cmd:
         # and creating a histogram for each slice, finding the peak of each.
         # The (H-K) color and mag K is saved for each peak to a list of points
         # to be used for the fit.
-        ipdb.set_trace()
+        
         # Splitting the boxed area in cmd-space to make histograms in each color line
         # Need to add 1 extra value so that last one can be cut off, since we loop using
         # Starting location + width
@@ -660,7 +660,7 @@ class cmd:
         width = round(abs(histLocations[0]-histLocations[1]), 6)
         # Removing the last point, giving us 50 bins!
         histLocations = histLocations[:-1]
-        
+
         # Empty dictionary for the fit data
         vecFitList = {'delta':[],'altmag':[]}
         
@@ -698,6 +698,6 @@ class cmd:
         return coeffs
 
 if __name__ == '__main__':
-    rc_dict={'altmag':[12, 16], 'delta':[1.0, 2.0], 'altMAD':[-0.1,0.1], 'MAD':[-0.1,0.1]}
-    cmd_test = cmd(findvec=True, fieldType='subfield', field_ind=24, rc_dict=rc_dict)
+    rc_dict={'altmag':[12, 15.5], 'delta':[0.5, 2.0], 'altMAD':[-0.1,0.1], 'MAD':[-0.1,0.1]}
+    cmd_test = cmd(findvec=True, fieldType='subfield', field_ind=39, rc_dict=rc_dict)
     print(cmd_test.coeffs[0])

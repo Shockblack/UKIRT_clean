@@ -10,7 +10,6 @@
 #-----------------------------------------------------------------------
 
 # Importing other Python files from project
-from statistics import median
 import createCMD
 
 # Importing necessary packages
@@ -25,6 +24,7 @@ class mapper:
 
         # Setting the variables as global variables
         self.year = year
+        self.field_ind = field_ind
 
         # This is the class from createCMD.py which stores values such as max/min ra/dec
         # This also includes a dictionary of the stars in the RC, named RC_dict
@@ -45,8 +45,24 @@ class mapper:
         self.dimension = self.findDimension()
 
 
-    def getNABStars(self):
+    def getNABStars(self, pixel_limits):
+
+        # Creating empy dictionary
+        pixel_RC_dict = {}
         
+        # Getting all the stars within a specific pixel
+        good_ra_high = self.cmd.RC_dict['RA']<=pixel_limits['RAmax'] 
+        good_ra_low = self.cmd.RC_dict['RA']>=pixel_limits['RAmin'] 
+        good_ra_inds = good_ra_low & good_ra_high
+
+        good_dec_high = self.cmd.RC_dict['Dec']<=pixel_limits['DECmax']
+        good_dec_low = self.cmd.RC_dict['Dec']>=pixel_limits['DECmin'] 
+        good_dec_inds = good_dec_low & good_dec_high 
+        
+        good_inds = good_ra_inds & good_dec_inds
+
+        for key in self.cmd.RC_dict.keys():
+            pixel_RC_dict[key] = self.cmd.RC_dict[key][good_inds]
 
         # First going to restructure and reorganize because
         # I can only think in very specific ways (sorry)
@@ -56,12 +72,12 @@ class mapper:
         RC_dict_org = []
         dist_list = []
 
-        for i in range(len(self.cmd.RC_dict['RA'])):
+        for i in range(len(pixel_RC_dict['RA'])):
             # Temporary dictionary
             temp_dict = {}
             # Looping over the keys to make the headers
-            for key in self.cmd.RC_dict.keys():
-                temp_dict[key] = self.cmd.RC_dict[key][i]
+            for key in pixel_RC_dict.keys():
+                temp_dict[key] = pixel_RC_dict[key][i]
             # Just creating some variables for easier use
             ra = self.cmd.ra
             dec = self.cmd.dec
@@ -139,8 +155,6 @@ class mapper:
 
             star['weight'] = star['weight']/weight_sum
 
-        # Checking the weights are summing to 1
-        print(np.sum(self.weights))
 
     def calcReddening(self):
 
@@ -157,8 +171,13 @@ class mapper:
         # Calculating color E(H-K) from E(H-K) = (H-K) - (H-K)_0
         # where we get (H-K)_0 from Nataf et al. 2013 and is similar
         # to the value of our data, so we decide to use Nataf's value.
-        self.reddening = color - 0.09
-        print(self.reddening)
+        reddening = color - 0.09
+
+        # Also calculate the extinction using the reddening vector
+        # found in the file createCMD.py
+        extinction = self.cmd.red_vec * reddening
+        
+        return reddening, extinction
 
     def findDimension(self, num_bins=10):
         """Function which will adjust the number of pixels within our map until 
@@ -240,13 +259,16 @@ class mapper:
         return dimension
 
     def pixelInfo(self, dimension=None):
-
-        if type(dimension) == None:
+        
+        # Checking if a custom dimension isn't given
+        # If none is given, uses the automatic one 
+        # calculated from function findDimension()
+        if type(dimension) == type(None):
             dimension = self.dimension
         
         # Creating the dictionary to house the pixel info
-        self.pixel_data = {'RA' : [], 'Dec' : [], 'ra_max' : [], 'ra_min' : [], 'dec_max' : [], 'dec_min' : [], \
-            'reddening' : [], 'extinction' : [], }
+        self.pixel_data = {'RA' : [], 'Dec' : [], 'l' : [], 'b' : [], 'edgelength' : [], 'RAmax' : [], \
+            'RAmin' : [], 'DECmax' : [], 'DECmin' : [], 'reddening' : [], 'extinction' : [], }
 
         # Splitting field into the pixels
         
@@ -268,6 +290,7 @@ class mapper:
                 dec_max = self.cmd.dec_max
             else:
                 dec_max = decbins[i+1]
+            
             # Start looping over ra
             for k in range(len(rabins)):
                 # Using one edge of bin
@@ -276,18 +299,78 @@ class mapper:
                 if k == dimension-1:
                     ra_max = self.cmd.ra_max
                 else:
-                    ra_max = rabins[i+1]
+                    ra_max = rabins[k+1]
                 
+                # Calculating the ra/dec and l/b of pixel center
+                # ra and dec
+                ra = (ra_min+ra_max)/2
+                dec = (dec_min+dec_max)/2
 
+                # l and b
+                c = coord.SkyCoord(ra=ra*u.degree,dec=dec*u.degree ,frame='icrs')
+                l = c.galactic.l.degree
+                b = c.galactic.b.degree
+
+                # Giving the dictionary location values so stars can be grabbed
+                self.pixel_data['RA'].append(ra)
+                self.pixel_data['Dec'].append(dec)
+                self.pixel_data['l'].append(l)
+                self.pixel_data['b'].append(b)
+                self.pixel_data['edgelength'].append(np.abs(ra_max-ra_min))
+                self.pixel_data['RAmin'].append(ra_max)
+                self.pixel_data['RAmax'].append(ra_min)
+                self.pixel_data['DECmin'].append(dec_max)
+                self.pixel_data['DECmax'].append(dec_min)
+
+                # Gathering a dict of pixel location limits for getNABStars
+                pixel_limits = {'RAmax' : ra_max, 'RAmin' : ra_min,\
+                    'DECmax' : dec_max, 'DECmin' : dec_min}
+
+                # Get all the stars within a pixel
+                self.getNABStars(pixel_limits)
+
+                # Calculate the reddening and extinction for the specific pixel
+                self.calcWeights()
+                reddening, extinction = self.calcReddening()
+
+                # Appending reddening and extinction values to dict
+                self.pixel_data['reddening'].append(reddening)
+                self.pixel_data['extinction'].append(extinction)
+
+        # Calculating what the edgelength of the map is
+        self.edge_length = self.pixel_data['l'][0] - self.pixel_data['l'][1]
+        
+
+    def saveMap(self, path = 'maps/'):
+        header = 'RA,DEC,l,b,edgelength,N_stars,A,Aerr,B,Berr,M_RC,M_RCerr,sigma_RC,sigma_RCerr,N_RC,N_RCerr,FinalColorRC,RealSTDcolorOpt,STDtotal,VarianceMin,MU1opt,MU2opt'
+        #date 
+        #year edge_length number_pixels 
+        #header for columns
+        #we will probably want some header info
+        with open(path+'field_pixel_data_'+str(self.field_ind)+'.map','w') as outfile:
+
+            for i in range(len(self.pixel_data['RA'])):
+                write_string = ""
+
+                for key in self.pixel_data.keys():
+                    write_string+='%0.6f,'%self.pixel_data[key][i]
+
+                outfile.write(write_string[:-1]+'\n')
         return
 
+
 if __name__ == "__main__":
-    field_ind = 21
-    rc_dict={'altmag':[12, 16], 'delta':[1.2, 2.0], 'altMAD':[-0.1,0.1], 'MAD':[-0.1,0.1]}
-    cmd_test = createCMD.cmd(findvec=True, fieldType='subfield', field_ind=field_ind, rc_dict=rc_dict)
-    map = mapper(cmd_test, field_ind=field_ind)
-    map.getNABStars()
-    map.calcWeights()
-    map.calcReddening()
-    print("Extinction = ", map.reddening*cmd_test.red_vec)
-    map.findDimension()
+    import pandas as pd
+
+    RC_limits_df = pd.read_csv('RC_limits_byEye.csv')
+    
+    for i in range(56):
+        field_limits = RC_limits_df.iloc[i]
+        field_ind = i
+
+        rc_dict={'altmag':[field_limits['Kmin'], field_limits['Kmax']],\
+            'delta':[field_limits['HKmin'], field_limits['HKmax']], 'altMAD':[-0.1,0.1], 'MAD':[-0.1,0.1]}
+        cmd_test = createCMD.cmd(findvec=True, fieldType='subfield', field_ind=field_ind, rc_dict=rc_dict)
+        map = mapper(cmd_test, field_ind=field_ind)
+        map.pixelInfo()
+        map.saveMap()

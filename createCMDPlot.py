@@ -21,6 +21,7 @@
 # Revision History:
 #   20-Apr-2022 :   File Created
 #   22-Apr-2022 :   Added reddening vector 
+#   23-Aug-2022 :   Added argparse for command line arguments
 #-----------------------------------------------------------------------
 
 # Gathering all our imports
@@ -32,8 +33,14 @@ from astropy import units as u
 import numpy as np
 import mpl_scatter_density
 from matplotlib.colors import LinearSegmentedColormap
+import argparse
 
-
+# Create command line arguments
+parser = argparse.ArgumentParser()
+parser.add_argument('-f', '--field', type=int, default=39, help='Field index for the cmd')
+parser.add_argument('-a', '--altmag', nargs=2, type=float, default=[12,15.5], help='Magnitude bound for fit')
+parser.add_argument('-d','--delta', nargs=2, type=float, default=[1.0,2.0], help='Color bound for fit')
+opt = parser.parse_args()
 
 def plotDensityCMD(cmd,limit_dict=None, plotvec=False, coeffs=None, savefig=False):
     """Creates a CMD of a given area with the density of stars
@@ -113,11 +120,19 @@ def plotDensityCMD(cmd,limit_dict=None, plotvec=False, coeffs=None, savefig=Fals
         plt.show()
 
 if __name__ == '__main__':
+    import csv
     # Creates the cmd_test object and dictionary for vector calculating
-    rc_dict={'altmag':[12, 15.5], 'delta':[1.0, 2.0], 'altMAD':[-0.1,0.1], 'MAD':[-0.1,0.1]}
-    cmd_test = createCMD.cmd(findvec=True, field_ind=24, fieldType='subfield',rc_dict=rc_dict)
+    rc_dict={'altmag':opt.altmag, 'delta':opt.delta, 'altMAD':[-0.1,0.1], 'MAD':[-0.1,0.1]}
+    #for i in range(56):
+    cmd_test = createCMD.cmd(findvec=True, field_ind=opt.field, fieldType='subfield',rc_dict=rc_dict)
     
     # Calls the calculation to find the reddening vector
     print("The reddening vector is: " + str(cmd_test.coeffs[0]))
     # Plots the density and vector
     plotDensityCMD(cmd_test, limit_dict=rc_dict, plotvec=True, coeffs=cmd_test.coeffs)
+
+    append_bool = input("Do you want to append the vector to the file? (y/n) \n")
+    if append_bool == 'y':
+        with open('RC_limits_byEye.csv', 'a') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow([opt.field, opt.delta[0], opt.delta[1], opt.altmag[0], opt.altmag[1]])
