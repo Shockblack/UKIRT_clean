@@ -2,7 +2,7 @@
 # File name: gonzBeam.py
 # 
 # Creates a data list for Gonzalez data from
-# a BEAM dat file from Gonzalez et al. 2012.
+# a BEAM dat file from Gonzalez et al. 2012 and 2018.
 # File contains l, b, E(J-K), sig_E(J-K), and
 # [Fe/H]. We primarily use the first four entries
 # for our work.
@@ -25,7 +25,6 @@
 #-------------------------------------------------------
 
 # Importing necessary packages and files
-from email import header
 import numpy as np #cause you know, numpy
 import ipdb #For error testing
 import pandas as pd #Used to create comparison file
@@ -90,7 +89,7 @@ class gonzDat:
             self.gonzAK.append(data)
 
 
-    def writeFile(self):
+    def writeFile(self, filename='gonzData.dat'):
 
         self.gonzData = []
 
@@ -100,7 +99,7 @@ class gonzDat:
             self.gonzData.append(data)
 
         #Opens file path
-        fileout = open(self.path+'gonzData.dat', 'w')
+        fileout = open(self.path+filename, 'w')
 
         #Writes data to file with organization of
         # ['ra', 'dec', 'l', 'b', 'AK', 'sigmaAK', 'E_JK', 'sigmaE_JK', '[Fe/H]']
@@ -165,9 +164,10 @@ class gonzDat:
 
 
 if __name__=='__main__':
-
-    gonz = gonzDat() #Initiates class. Edit 'path' and 'filename' parameters to change path
+    # EJK_BEAM.dat is 2012 data and EJK_BEAM_2018.txt is 2018 gonz data
+    gonz = gonzDat(filename='EJK_BEAM_2018.txt') #Initiates class. Edit 'path' and 'filename' parameters to change path
     gonz.calcRaDec()
     gonz.calcAK()
-    gonz.writeFile()
-    gonz.compare_map()
+    ipdb.set_trace()
+    gonz.writeFile(filename='gonzData_2018.dat')
+    gonz.compare_map(map1='../data/gonz/gonzData_2018.dat', fileout='gonzDataScaled_2018.dat')

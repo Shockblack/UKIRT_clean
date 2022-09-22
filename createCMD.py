@@ -3,16 +3,13 @@
 # 
 # A file adapted from original plotCMD.py file which gathers photometry
 # data to create CMDs. This also has started organization to derive 
-# reddening vectors for our fields. This is in the process in moving away
-# from luminosity fitting similar to Nataf et al. 2013 and doing the
-# weight method like Surot et al. 2020.
+# reddening vectors for our fields.
 #
 # Programmer: Aiden Zelakiewicz (zelakiewicz.1@osu.edu)
 #             Samson Johnson    (johnson.7080@osu.edu)
 #
 # For questions, reach out to:
 #   Aiden Zelakiewicz   (zelakiewicz.1@osu.edu)
-#   Samson Johnson      (johnson.7080@osu.edu)
 #
 # Revision History:
 #   21-Mar-2022 :   File created.
@@ -33,10 +30,8 @@ import os
 import pickle
 from astropy import coordinates as coord
 from astropy import units as u
-from matplotlib.pyplot import hist
 import numpy as np
 import parameters as pram
-import ipdb
 
 class cmd:
     def __init__(self, ra=None, dec=None, l=None, b=None, year = pram.year, edge_length=0.25, findvec = False, fieldType = 'field', field_ind=0, rc_dict={}):
@@ -121,16 +116,23 @@ class cmd:
             
         else:
 
+
+            #Checks if l and b are given. If not, calculate them
+            if type(l)==type(None) or type(b)==type(None) and type(ra)!=type(None) and type(dec)!=type(None):
+                c = coord.SkyCoord(ra=self.ra*u.degree,dec=self.dec*u.degree ,frame='icrs')
+                l = c.galactic.l.degree
+                b = c.galactic.b.degree
+            elif type(ra)==type(None) or type(dec)==type(None) and type(l)!=type(None) and type(b)!=type(None):
+                c = coord.SkyCoord(l=self.l*u.degree,b=self.b*u.degree ,frame='galactic')
+                ra = c.icrs.ra.degree
+                dec = c.icrs.dec.degree
+            elif type(ra)==type(None) or type(dec)==type(None) and type(l)==type(None) or type(b)==type(None):
+                raise Exception('Either ra and dec or l and b must be given or use preselcted fields.')
+
             # Set our ra and dec
             self.ra = ra
             self.dec = dec
 
-            #Checks if l and b are given. If not, calculate them
-            if type(l)==type(None) or type(b)==type(None):
-                c = coord.SkyCoord(ra=self.ra*u.degree,dec=self.dec*u.degree ,frame='icrs')
-                l = c.galactic.l.degree
-                b = c.galactic.b.degree
-        
             self.l = l
             self.b = b
 
@@ -148,8 +150,9 @@ class cmd:
         self.getStars(limit_dict=self.limit_dict)
         self.color_mag_cut(self.cm_dict,percentile_cut=True)
 
-        self.coeffs = self.calcReddeningVec(rc_dict)
-        self.red_vec = self.coeffs[0]
+        if findvec == True:
+            self.coeffs = self.calcReddeningVec(rc_dict)
+            self.red_vec = self.coeffs[0]
 
 
     def readUKIRTfields(self, filename='ukirtFieldLocations.sav', dir='fieldLocations/'):
