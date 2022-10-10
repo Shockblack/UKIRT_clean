@@ -701,6 +701,6 @@ class cmd:
         return coeffs
 
 if __name__ == '__main__':
-    rc_dict={'altmag':[12, 15.5], 'delta':[0.5, 2.0], 'altMAD':[-0.1,0.1], 'MAD':[-0.1,0.1]}
-    cmd_test = cmd(findvec=True, fieldType='subfield', field_ind=39, rc_dict=rc_dict)
+    rc_dict={'altmag':[12, 15.5], 'delta':[0.1, 1.0], 'altMAD':[-0.1,0.1], 'MAD':[-0.1,0.1]}
+    cmd_test = cmd(findvec=True, fieldType='field', field_ind=3, rc_dict=rc_dict)
     print(cmd_test.coeffs[0])

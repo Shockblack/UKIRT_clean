@@ -44,6 +44,33 @@ class mapper:
 
         self.dimension = self.findDimension()
 
+    def gen_grid(self, grid_grow_scale=0.025):
+        
+        ra_span = self.cmd.ra_max-self.cmd.ra_min
+        dec_span = self.cmd.dec_max-self.cmd.dec_min
+
+        ra_max = self.cmd.ra_max+grid_grow_scale*ra_span
+        ra_min = self.cmd.ra_min-grid_grow_scale*ra_span
+
+        dec_max = self.cmd.dec_max+grid_grow_scale*dec_span
+        dec_min = self.cmd.dec_min-grid_grow_scale*dec_span
+
+        ra_range = np.arange(ra_min, ra_max, self.edge_length)
+        dec_range = np.arange(dec_min, dec_max, self.edge_length)
+
+
+        self.grid_pixel_centers = []
+
+        #Calculates RA and DEC right when map files begins being made for earier use and to save time.
+        for ra in ra_range:
+            for dec in dec_range:
+                c = coord.SkyCoord(ra=ra*u.degree,dec=dec*u.degree ,frame='icrs')
+                l = c.galactic.l.degree
+                b = c.galactic.b.degree
+                self.grid_pixel_centers.append([ra,dec,l,b])
+
+        return
+
 
     def getNABStars(self, pixel_limits):
 
@@ -169,9 +196,9 @@ class mapper:
         color = average_color / np.sum(self.weights)
 
         # Calculating color E(H-K) from E(H-K) = (H-K) - (H-K)_0
-        # where we get (H-K)_0 from Nataf et al. 2013 and is similar
+        # where we get (H-K)_0 from Nataf et al. 2021 and is similar
         # to the value of our data, so we decide to use Nataf's value.
-        reddening = color - 0.09
+        reddening = color - 0.15
 
         # Also calculate the extinction using the reddening vector
         # found in the file createCMD.py
