@@ -54,14 +54,24 @@ def A_K(array):
 def N_RC(array):
     return
 
-def rel_diff(array):
+def cardelli(array):
+    return (array-0.15)*1.5
+
+def rel_diff(array, cap=True):
     gonzData = np.loadtxt('../data/gonz/gonzDataScaled.dat',delimiter=',')
     M_RC = 13.1
     ak = array-M_RC
     diff = []
-
+    
     for i in range(len(gonzData)):
-        diff.append(ak[i]-gonzData[i][4])
+        # Finding the difference between the AK values
+        if cap:
+            ukirt_ak = np.minimum(ak[i], 1.5)
+            gonz_ak = np.minimum(gonzData[i][4], 1.5)
+        else:
+            ukirt_ak = ak[i]
+            gonz_ak = gonzData[i][4]
+        diff.append(ukirt_ak - gonz_ak)
 
     diff = np.array(diff)
 
@@ -75,8 +85,8 @@ def plot_grid_map(map_data,lb=True,func=do_nothing,axis=7,cb_label=r'$A(K)$',pat
     good_data = func(map_data[:,axis][~np.isnan(map_data[:,axis])])
     cmap_max = np.max(good_data)
     cmap_min = np.min(good_data)
-    cmap_max = np.percentile(good_data,95) 
-    cmap_min = 0.2#np.percentile(good_data,5)
+    cmap_max = np.percentile(good_data,99) 
+    cmap_min = np.percentile(good_data,5) #0.1
 
     norm = matplotlib.colors.Normalize(vmin=cmap_min,vmax=cmap_max)
     cmap = cm.get_cmap('cividis_r')
@@ -124,17 +134,17 @@ def plot_grid_map(map_data,lb=True,func=do_nothing,axis=7,cb_label=r'$A(K)$',pat
                         ipdb.set_trace()
                         print(pixel[axis])
 
-            #if useangle == True:
+            # if useangle == True:
             #    if pixel[2]>160:
             #        rect = pat.Rectangle((pixel[2]-360,pixel[3]),pixel[4],pixel[4],angle=angle,facecolor=cmap(norm(good_data[i])))
             #    else:
             #        rect = pat.Rectangle((pixel[2],pixel[3]),pixel[4],pixel[4],angle=angle,facecolor=cmap(norm(good_data[i])))
-            #else:
+            # else:
             #    if pixel[2]>160:
             #        rect = pat.Rectangle((pixel[2]-360,pixel[3]),pixel[4],pixel[4],facecolor=cmap(norm(good_data[i])))
             #    else:
             #        rect = pat.Rectangle((pixel[2],pixel[3]),pixel[4],pixel[4],facecolor=cmap(norm(good_data[i])))
-            #        
+                   
             
             #Lines below for coloring red spots on sharp line changes (UKIRT stuff)
             #if pixel[2]>358.96 and pixel[2] < 359.0113 and pixel[3] > -1.52 and pixel[3] < -1.435:
@@ -151,21 +161,21 @@ def plot_grid_map(map_data,lb=True,func=do_nothing,axis=7,cb_label=r'$A(K)$',pat
         ax.set_ylabel('$b$')
     
     ax.set_aspect('equal')
-    #plt.savefig(path+figname)
+    # plt.savefig(path+figname)
     plt.show()
 
 
 
 if __name__=='__main__':
 
-    #est_map = read_map('maps/map_PSF_2017_2.map')
-    test_map = read_map('maps/field_pixel_data_21.map')
-    #test_map = read_map('maps/map_PSF_2017_1.5_gonzGrid.map')
-    #test_map = read_map('../data/gonz/gonzData.dat')
+    # test_map = read_map('maps/map_PSF_2017_2.map')
+    test_map = read_map('maps/mcmc_map_1000.map')
+    # test_map = read_map('maps/field_pixel_data_21.map')
+    # test_map = read_map('maps/map_PSF_2017_1.5_gonzGrid.map')
 
     #ipdb.set_trace()
-    plot_grid_map(test_map,axis=10,figname='testExtinction_Surot.pdf')#[:1000])
+    plot_grid_map(test_map,axis=6,func=A_K, figname='AK_PSF_2017_with_MAD.pdf')#[:1000])
     #plot_grid_map(test_map,func=do_nothing,axis=4,figname='gonzMapAll.pdf')#[:1000])
     #plot_grid_map(test_map,func=A_K,axis=10,figname='UKIRTgonzGrid.pdf',useangle=False)
-    #plot_grid_map(test_map,func=rel_diff,axis=10,figname='UKIRTgonzDIFF_notABS.pdf',useangle=False)
+    # plot_grid_map(test_map,func=rel_diff,axis=10,figname='UKIRTgonzDIFF_CAPPED.pdf',useangle=False)
     #plot_grid_map(test_map,func=A_K,axis=7)#[:1000])

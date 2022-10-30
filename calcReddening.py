@@ -11,26 +11,33 @@
 
 # Importing other Python files from project
 import createCMD
+import RC_fitter
+import rc_mcmc
+from readData import readUKIRTfields
 
 # Importing necessary packages
 import numpy as np
 import parameters as pram
 from astropy import coordinates as coord
 from astropy import units as u
+import multiprocessing as mp
 import ipdb
 
 class mapper:
-    def  __init__(self, cmdclass, year=pram.year, field_ind=0, num_pixels=128):
+    def  __init__(self, cmdclass=None, year=pram.year, field_ind=0, num_pixels=128,ra_lims=None,dec_lims=None):
 
         # Setting the variables as global variables
         self.year = year
         self.field_ind = field_ind
 
+        self.ra_lims = ra_lims
+        self.dec_lims = dec_lims
+
         # This is the class from createCMD.py which stores values such as max/min ra/dec
         # This also includes a dictionary of the stars in the RC, named RC_dict
-        self.cmd = cmdclass
+        # self.cmd = cmdclass
 
-        self.raw_fieldData = self.cmd.readUKIRTfields()
+        self.raw_fieldData = readUKIRTfields()
         
         # Select by year
         self.fieldData = []
@@ -40,20 +47,21 @@ class mapper:
 
         # Now we must find the size/location of the fields
         # by taking the field max/min and dividing by num of pixels
-        self.edge_length = abs(self.cmd.ra_max - self.cmd.ra_min) / num_pixels
+        # self.edge_length = abs(self.cmd.ra_max - self.cmd.ra_min) / num_pixels
+        self.edge_length = pram.arcmin/60.0
 
-        self.dimension = self.findDimension()
+        # self.dimension = self.findDimension()
 
     def gen_grid(self, grid_grow_scale=0.025):
         
-        ra_span = self.cmd.ra_max-self.cmd.ra_min
-        dec_span = self.cmd.dec_max-self.cmd.dec_min
+        ra_span = self.ra_max-self.ra_min
+        dec_span = self.dec_max-self.dec_min
 
-        ra_max = self.cmd.ra_max+grid_grow_scale*ra_span
-        ra_min = self.cmd.ra_min-grid_grow_scale*ra_span
+        ra_max = self.ra_max+grid_grow_scale*ra_span
+        ra_min = self.ra_min-grid_grow_scale*ra_span
 
-        dec_max = self.cmd.dec_max+grid_grow_scale*dec_span
-        dec_min = self.cmd.dec_min-grid_grow_scale*dec_span
+        dec_max = self.dec_max+grid_grow_scale*dec_span
+        dec_min = self.dec_min-grid_grow_scale*dec_span
 
         ra_range = np.arange(ra_min, ra_max, self.edge_length)
         dec_range = np.arange(dec_min, dec_max, self.edge_length)
@@ -68,6 +76,39 @@ class mapper:
                 l = c.galactic.l.degree
                 b = c.galactic.b.degree
                 self.grid_pixel_centers.append([ra,dec,l,b])
+
+        return
+
+    def get_fields_stats(self):
+        if (self.ra_lims != None) and (self.dec_lims != None):
+            self.ra_min = self.ra_lims[0]
+            self.ra_max = self.ra_lims[1]
+
+            self.dec_min = self.dec_lims[0]
+            self.dec_max = self.dec_lims[1]
+            return
+        
+        self.allRAmax = []
+        self.allRAmin = []
+        self.allDECmax = []
+        self.allDECmin = []
+        
+        for field in self.fieldData:
+            self.allRAmax.append(field['RAmax'])
+            self.allRAmin.append(field['RAmin'])
+            self.allDECmax.append(field['DECmax'])
+            self.allDECmin.append(field['DECmin'])
+        
+        self.allRAmax = np.array(self.allRAmax)
+        self.allRAmin = np.array(self.allRAmin)
+        self.allDECmax = np.array(self.allDECmax)
+        self.allDECmin = np.array(self.allDECmin)
+
+        self.ra_min = self.allRAmin.min()
+        self.ra_max = self.allRAmax.max()
+
+        self.dec_min = self.allDECmin.min()
+        self.dec_max = self.allDECmax.max()
 
         return
 
@@ -152,7 +193,8 @@ class mapper:
         self.NABStars = np.delete(self.NABStars, bad_ind)
 
 
-    def calcWeights(self):
+
+    def calcDistWeights(self):
 
         # Empty list to store the weight values
         self.weights = []
@@ -182,6 +224,19 @@ class mapper:
 
             star['weight'] = star['weight']/weight_sum
 
+    def filter_grid(self):
+        npixels = 0
+        self.pixels = []
+        for pixel in self.grid_pixel_centers:
+            for field in self.fieldData:
+                #if the pixel falls in a field, add it to the list
+                if pixel[0]<=field['RAmax'] and pixel[0]>=field['RAmin'] and pixel[1]<=field['DECmax'] and pixel[1]>=field['DECmin']:
+                    self.pixels.append(pixel)
+                    npixels+=1
+                    #pixel passsed, no more checking needed
+                    break
+        self.npixels = npixels
+        print('Got '+str(npixels)+' to fit!')
 
     def calcReddening(self):
 
@@ -357,7 +412,7 @@ class mapper:
                 self.getNABStars(pixel_limits)
 
                 # Calculate the reddening and extinction for the specific pixel
-                self.calcWeights()
+                self.calcDistWeights()
                 reddening, extinction = self.calcReddening()
 
                 # Appending reddening and extinction values to dict
@@ -366,38 +421,148 @@ class mapper:
 
         # Calculating what the edgelength of the map is
         self.edge_length = self.pixel_data['l'][0] - self.pixel_data['l'][1]
-        
+    
+    def get_guesses(self, filename):
+        predictions = np.loadtxt(filename, delimiter=',')
+        return predictions
 
-    def saveMap(self, path = 'maps/'):
+    def fit_map(self):
+
+        # Getting the guesses from the initial fit file
+        # Array needs to be reversed since it was generated in reverse order (sorry)
+        predictions = self.get_guesses('../data/predictions.csv')
+        predictions = np.flip(predictions, axis=0) # reversal
+
+        # Loop over the pixel centers
+        for i, pixel in enumerate(self.pixels):
+
+            # ipdb.set_trace()
+
+            initial_guess = predictions[i]
+
+            init_EWRC, init_B, init_M, init_sigma, init_color = initial_guess[4], initial_guess[5], initial_guess[6], initial_guess[7], initial_guess[8]
+
+            i += 1
+
+            # Get the color magnitude diagram for the pixel
+            # The color-mag cuts are done initially already on this call
+            cmd = createCMD.cmd(pixel[0],pixel[1],l=pixel[2],b=pixel[3],edge_length=self.edge_length)
+            
+            # Get the data for the fit
+            fit_data = np.array([cmd.fitStarDict['altmag'],cmd.fitStarDict['delta']]).T
+
+            # Run initial magnitude fit
+            best_fit_params = rc_mcmc.RC_MCMC(fit_data, init_EWRC, init_B, init_M, init_sigma)
+
+            weights = RC_fitter.calcWeights(fit_data, best_fit_params['A'], best_fit_params['B'], best_fit_params['MRC'], best_fit_params['SIGMA'], best_fit_params['NRC'])
+
+            # Running color fit
+            color_fit_vals = RC_fitter.determineColor(fit_data,weights,init_color)
+            k=0
+            # Checking if the fit is in agreement with the initial guess
+            while abs(color_fit_vals[0] - init_color) > 0.03 and k < 5:
+                # Try and get a initial guess for Equivalece Width of RC, if not use 1.0 as default
+                try:
+                    init_EWRC = best_fit_params['NRC']/best_fit_params['A']
+                except:
+                    init_EWRC = 1.0
+                init_B = best_fit_params['B']
+                init_M = best_fit_params['MRC']
+                init_sigma = best_fit_params['SIGMA']
+                init_color = color_fit_vals[0]
+
+                # Change the RC limits
+                cm_dict = {'altmag': [init_M-1.5, init_M+1.5], 'delta': [0.5*init_color, 5]}
+                cmd.color_mag_cut(cm_dict, percentile_cut=True)
+
+                # Get the data for the fit
+                fit_data = np.array([cmd.fitStarDict['altmag'],cmd.fitStarDict['delta']]).T
+
+                # Run initial magnitude fit
+                best_fit_params = rc_mcmc.RC_MCMC(fit_data, init_EWRC, init_B, init_M, init_sigma)
+                weights = RC_fitter.calcWeights(fit_data, best_fit_params['A'], best_fit_params['B'], best_fit_params['MRC'], best_fit_params['SIGMA'], best_fit_params['NRC'])
+                # Running color fit
+                color_fit_vals = RC_fitter.determineColor(fit_data,weights,init_color)
+
+                k+=1
+                print("Color fit iteration: ", k)
+
+            # Getting the best params and errors
+            best_params = []
+            for key in best_fit_params.keys():
+                best_params.append(best_fit_params[key])
+
+            # Getting the best color
+            best_params.append(color_fit_vals[0])
+            best_params.append(color_fit_vals[1])
+
+            # # Get the number of bins to use in the histogram for the MCMC fit
+            # num_bins = int(.05*len(cmd.fitStarDict['altmag']))
+
+            # # Initiate the MCMC fit
+            # rc = RC_fitter.RedClump(cmd, binnumber=num_bins)
+            # M, N, Nerr = rc.prepare_data_hist(cmd.fitStarDict['altmag'])
+            # sampler, pos, prob, state = rc.run_MCMC(M, N, Nerr)
+
+            # # Get the best fit parameters
+            # samples = sampler.flatchain
+            # best_ind = np.argmax(sampler.flatlnprobability)
+            # best_params = samples[best_ind]
+
+            for param in best_params:
+                pixel.append(param)
+            
+
+            # Print out the progress
+            print("Pixel ",i," of ",len(self.pixels)," complete.")
+            print("Best fit parameters: ",self.pixels[i-1][4:])
+
+            if i %1000 == 0:
+                self.saveMap(filename='maps/mcmc_map_'+str(i))
+
+
+
+        return
+
+    def saveMap(self, path = 'maps/', filename = 'maps/mcmc_map'):
         header = 'RA,DEC,l,b,edgelength,N_stars,A,Aerr,B,Berr,M_RC,M_RCerr,sigma_RC,sigma_RCerr,N_RC,N_RCerr,FinalColorRC,RealSTDcolorOpt,STDtotal,VarianceMin,MU1opt,MU2opt'
         #date 
         #year edge_length number_pixels 
         #header for columns
         #we will probably want some header info
-        with open(path+'field_pixel_data_'+str(self.field_ind)+'.map','w') as outfile:
-
-            for i in range(len(self.pixel_data['RA'])):
+        # with open(path+'field_pixel_data_'+str(self.field_ind)+'.map','w') as outfile:
+        with open(filename+'.map','w') as outfile:
+            for pixel in self.pixels:
                 write_string = ""
-
-                for key in self.pixel_data.keys():
-                    write_string+='%0.6f,'%self.pixel_data[key][i]
-
+                
+                for item in pixel:
+                    write_string+='%0.6f,'%item
+                
                 outfile.write(write_string[:-1]+'\n')
         return
+
 
 
 if __name__ == "__main__":
     import pandas as pd
 
-    RC_limits_df = pd.read_csv('RC_limits_byEye.csv')
-    
-    for i in range(56):
-        field_limits = RC_limits_df.iloc[i]
-        field_ind = i
+    ext_map = mapper()
+    ext_map.get_fields_stats()
+    ext_map.gen_grid()
+    ext_map.filter_grid()
+    ext_map.fit_map()
+    ext_map.saveMap()
 
-        rc_dict={'altmag':[field_limits['Kmin'], field_limits['Kmax']],\
-            'delta':[field_limits['HKmin'], field_limits['HKmax']], 'altMAD':[-0.1,0.1], 'MAD':[-0.1,0.1]}
-        cmd_test = createCMD.cmd(findvec=True, fieldType='subfield', field_ind=field_ind, rc_dict=rc_dict)
-        map = mapper(cmd_test, field_ind=field_ind)
-        map.pixelInfo()
-        map.saveMap()
+
+    # RC_limits_df = pd.read_csv('RC_limits_byEye.csv')
+    while False:
+        for i in range(56):
+            field_limits = RC_limits_df.iloc[i]
+            field_ind = i
+
+            rc_dict={'altmag':[field_limits['Kmin'], field_limits['Kmax']],\
+                'delta':[field_limits['HKmin'], field_limits['HKmax']], 'altMAD':[-0.1,0.1], 'MAD':[-0.1,0.1]}
+            cmd_test = createCMD.cmd(findvec=True, fieldType='subfield', field_ind=field_ind, rc_dict=rc_dict)
+            map = mapper(cmd_test, field_ind=field_ind)
+            map.pixelInfo()
+            map.saveMap()

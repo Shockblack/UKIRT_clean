@@ -34,7 +34,7 @@ import numpy as np
 import parameters as pram
 
 class cmd:
-    def __init__(self, ra=None, dec=None, l=None, b=None, year = pram.year, edge_length=0.25, findvec = False, fieldType = 'field', field_ind=0, rc_dict={}):
+    def __init__(self, ra=None, dec=None, l=None, b=None, year = pram.year, edge_length=0.25, findvec = False, fieldType = 'field', field_ind=0, rc_dict={}, cm_dict=None):
         """The cmd class creates cmds at a given location. The class can be fed the location of a square area, denoted 
         as pixel, to find the cmd of or use the field and subfields themselves. The reddening vector of a given field
         or subfield is able to be calculated as well. If the reddening vector isn't being found then ra and dec
@@ -119,11 +119,11 @@ class cmd:
 
             #Checks if l and b are given. If not, calculate them
             if type(l)==type(None) or type(b)==type(None) and type(ra)!=type(None) and type(dec)!=type(None):
-                c = coord.SkyCoord(ra=self.ra*u.degree,dec=self.dec*u.degree ,frame='icrs')
+                c = coord.SkyCoord(ra=ra*u.degree,dec=dec*u.degree ,frame='icrs')
                 l = c.galactic.l.degree
                 b = c.galactic.b.degree
             elif type(ra)==type(None) or type(dec)==type(None) and type(l)!=type(None) and type(b)!=type(None):
-                c = coord.SkyCoord(l=self.l*u.degree,b=self.b*u.degree ,frame='galactic')
+                c = coord.SkyCoord(l=l*u.degree,b=b*u.degree ,frame='galactic')
                 ra = c.icrs.ra.degree
                 dec = c.icrs.dec.degree
             elif type(ra)==type(None) or type(dec)==type(None) and type(l)==type(None) or type(b)==type(None):
@@ -144,7 +144,10 @@ class cmd:
             self.raw_field_inds = self.findFields(plot_fields=False)
 
             self.limit_dict = {'N':[10,1e6],'altN':[3,1e6],'offset':[-0.1,0.1]}
-            self.cm_dict = {'altmag':[12,16],'delta':[-1,5]}
+            if type(cm_dict)==type(None):
+                self.cm_dict = {'altmag':[12,16],'delta':[-1,5]}
+            else:
+                self.cm_dict = cm_dict
 
         
         self.getStars(limit_dict=self.limit_dict)

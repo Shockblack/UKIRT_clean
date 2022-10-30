@@ -17,6 +17,7 @@ from matplotlib import cm
 from astropy import coordinates as coord
 from astropy import units as u 
 import numpy as np
+import parameters as pram
 import ipdb
 
 def read_map(filename):
@@ -40,8 +41,10 @@ def plot_grid_map(map_data, axis=10, cb_label=r'$A(K)$', path='figs/', figname='
     good_data = map_data[:,axis][~np.isnan(map_data[:,axis])]
     cmap_max = np.max(good_data)
     cmap_min = np.min(good_data)
-    cmap_max = 1.8#np.percentile(good_data,95) 
-    cmap_min = 0.1#np.percentile(good_data,5)
+    # cmap_max = np.percentile(good_data,99) 
+    # cmap_min = np.percentile(good_data,5)
+    cmap_min = 0.1
+    cmap_max = 1.8
 
     norm = matplotlib.colors.Normalize(vmin=cmap_min,vmax=cmap_max)
     cmap = cm.get_cmap('cividis_r')
@@ -51,15 +54,15 @@ def plot_grid_map(map_data, axis=10, cb_label=r'$A(K)$', path='figs/', figname='
     cbar.set_label(cb_label)
 
     pixel = map_data[0]
-    angle = calc_angle(pixel[0]-pixel[4]/2.,pixel[1]-pixel[4]/2.,pixel[0]-pixel[4]/2.,pixel[1]+pixel[4]/2.)
+    angle = calc_angle(pixel[0]-pram.arcmin/60./2.,pixel[1]-pram.arcmin/60./2.,pixel[0]-pram.arcmin/60./2.,pixel[1]+pram.arcmin/60./2.)
 
     for i in range(len(map_data)):
         pixel = map_data[i]
 
         if pixel[2]>160:
-            rect = pat.Rectangle((pixel[2]-360,pixel[3]),pixel[4],pixel[4],angle=angle,facecolor=cmap(norm(pixel[axis])))
+            rect = pat.Rectangle((pixel[2]-360,pixel[3]),pram.arcmin/60.,pram.arcmin/60.,angle=angle,facecolor=cmap(norm(pixel[axis])))
         else:
-            rect = pat.Rectangle((pixel[2],pixel[3]),pixel[4],pixel[4],angle=angle,facecolor=cmap(norm(pixel[axis])))
+            rect = pat.Rectangle((pixel[2],pixel[3]),pram.arcmin/60.,pram.arcmin/60.,angle=angle,facecolor=cmap(norm(pixel[axis])))
 
         ax.add_patch(rect)
 
@@ -75,13 +78,9 @@ def plot_grid_map(map_data, axis=10, cb_label=r'$A(K)$', path='figs/', figname='
 
 if __name__=='__main__':
     meta_map_data = []
-    for i in range(56):
-        index = str(i)
-        map_data = read_map('maps/field_pixel_data_'+index+'.map')
-        for star in map_data:
-            meta_map_data.append(star)
+    map_data = read_map('maps/mcmc_map_2000.map')
+    
+    map_data[:,8]=map_data[:,8]-12.93
 
-    meta_map_data = np.array(meta_map_data)
-    ipdb.set_trace()
-    plot_grid_map(meta_map_data,axis=10)
+    plot_grid_map(map_data,axis=8)
     plt.show()

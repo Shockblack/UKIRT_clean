@@ -23,10 +23,10 @@ class redclumpfinder():
         self.Iterations=Iterations
         return 
 
-    def fitRCnew(self,func,plotfit=False,A=None,B=None,N_RC=None,M_RC=None,sigma_RC=None):
+    def fitRCnew(self,func,plotfit=False,A=None,B=None,N_RC=None,M_RC=None,sigma_RC=None, method=None):
 
         #first, find magnitude of RC
-        self.fitRCMagnitude(func,plotfit=plotfit,A=A,B=B,N_RC=N_RC,M_RC=M_RC,sigma_RC=sigma_RC)
+        self.fitRCMagnitude(func,plotfit=plotfit,A=A,B=B,N_RC=N_RC,M_RC=M_RC,sigma_RC=sigma_RC, method=method)
 
         A = self.fit.best_values['A']
         B = self.fit.best_values['B']
@@ -247,7 +247,7 @@ class redclumpfinder():
             exit('Invalid method given')
         return M_RCguess
 
-    def fitRCMagnitude(self,func,plotfit=False,figdir='../misc_figs/maghist2.pdf',A=None,B=None,N_RC=None,M_RC=None,sigma_RC=None,pixID=None):
+    def fitRCMagnitude(self,func,plotfit=False,figdir='../misc_figs/maghist2.pdf',A=None,B=None,N_RC=None,M_RC=None,sigma_RC=None,pixID=None, method=None):
         
         self.modelMag = lmfit.Model(func)
         fitinds = self.cmd.fitMagHist != 0
@@ -276,8 +276,10 @@ class redclumpfinder():
         params['M_RC'].max = 17.
         params['sigma_RC'].min=0
         #params['sigma_RC'].min=.3
-
-        self.fit = self.modelMag.fit(yvals,params,M=xvals)#,weights=1/(np.sqrt(yvals)))
+        if type(method) == type(None):
+            self.fit = self.modelMag.fit(yvals,params,M=xvals)#, method='nelder')#,weights=1/(np.sqrt(yvals)))
+        else:
+            self.fit = self.modelMag.fit(yvals,params,M=xvals, method=method)
 
         if plotfit:
             fig, ax = plt.subplots()

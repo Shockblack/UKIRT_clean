@@ -80,17 +80,18 @@ def do_nothing(array):
 
 def rel_diff(array, cap=True, rel=False, adjust_filter=True, ccm=False):
     gonzData = np.loadtxt('../data/gonz/gonzData_2018.dat',delimiter=',')
-    M_RC = 13.1
+    M_RC = 12.93
 
     if ccm:
+        if adjust_filter:
+            array = array*1.062 + 0.017
+        array = array - 0.15
+        
         ak = array*1.5 # Reddening law from Cardelli
     else:
         ak = array-M_RC
 
     diff = []
-    
-    if adjust_filter:
-        gonzData[:,4] = (gonzData[:,4] + 0.689*0.012)/1.069
 
     gonz_nonull=gonzData[:,4][~np.isnan(array)]
     ak=ak[~np.isnan(array)]
@@ -129,7 +130,9 @@ def plot_grid_map(map_data,lb=True,func=do_nothing,axis=7,cb_label=cmap_label,pa
     rel = False
 
     #build color bar
-    good_data = func(map_data[:,axis][~np.isnan(map_data[:,axis])], rel=rel)
+    good_data = func(map_data[:,axis][~np.isnan(map_data[:,axis])], ccm=True)
+
+    
     cmap_max = np.max(good_data)
     cmap_min = np.min(good_data)
     
@@ -227,7 +230,7 @@ def plot_differences_hist(map_data,func=do_nothing,axis=7,path='figs/',figname='
     # fig = px.bar(x=bin_edges, y=hist)
 
     # Adding statistic intervals
-    plt.axvline(x=median, label='Median = {}±{}'.format(round(median, 5), round(median_std, 5)), ls='-.',color='black')
+    plt.axvline(x=median, label='Median = {}±{}'.format(round(median, 4), round(median_std, 4)), ls='-.',color='black')
     plt.axvline(x=z1_left, label='34th Percentile = {}'.format(round(z1_left, 3)), ls='--', color='black')
     plt.axvline(x=z1_right, label='68th Percentile = {}'.format(round(z1_right, 3)), ls='--', color='red')
     plt.axvline(x=z2_left, label='2.5th Percentile = {}'.format(round(z2_left, 3)), ls=':', color='black')
@@ -255,7 +258,7 @@ def plot_mags(map_data, func=do_nothing, axis=10, path='figs/',figname='mag_comp
     gonzData = np.loadtxt('../data/gonz/gonzDataScaled.dat',delimiter=',')
     
     gonzData[:,4] = (gonzData[:,4] + 0.689*0.012)/1.069
-    M_RC = 13.1
+    M_RC = 12.93
     ak = map_data[:,10]-M_RC
 
     # ukirt_ak = np.minimum(ak, 1.5)
@@ -283,16 +286,27 @@ def plot_mags(map_data, func=do_nothing, axis=10, path='figs/',figname='mag_comp
 
 def plot_mag_card(map_data, path='figs/',figname='mag_comparison_ccm.pdf', error_sample=False, cap=False, cap_value=1.5):
 
-    gonzData = np.loadtxt('../data/gonz/gonzDataScaled.dat',delimiter=',')
+    gonzData = np.loadtxt('../data/gonz/gonzData_2018.dat',delimiter=',')
     
     # Adjusting the 2MASS Ks magnitude to match the UKIRT K
     # extinction and error values
-    gonzData[:,4] = (gonzData[:,4] + 0.689*0.012)/1.069
-    gonzData[:,5] = gonzData[:,5]/1.069
+    # gonzData[:,4] = (gonzData[:,4] + 0.689*0.012)/1.069
+    # gonzData[:,5] = gonzData[:,5]/1.069
 
     # Adjusting UKIRT H-K color to match 2MASS H-K_s
-    # map_data[:,16] = map_data[:,16]*1.062 + 0.017
-    # map_data[:,17] = map_data[:,17]*1.062
+    map_data[:,16] = map_data[:,16]*1.062 + 0.017
+    map_data[:,17] = np.sqrt((map_data[:,17]*1.062))
+
+    # Converting from (H-K) to E(H-K)
+    map_data[:,16] = map_data[:,16] - 0.15
+
+    nan_ukirt = np.isnan(map_data[:,16])
+    nan_gonz = np.isnan(gonzData[:,4])
+    nan_ind = np.logical_or(nan_ukirt, nan_gonz)
+
+    # Removing NaN values
+    map_data = map_data[~nan_ind]
+    gonzData = gonzData[~nan_ind]
 
     # Calculating the extinction using Cardelli 1989 law
     ak = map_data[:,16] * 1.5
@@ -359,19 +373,21 @@ def plot_contour(map_data, path='figs/',figname='mag_contour_ccm.pdf', datafile=
     
     # Adjusting the 2MASS Ks magnitude to match the UKIRT K
     # extinction and error values
-    gonzData[:,4] = (gonzData[:,4] + 0.689*0.012)/1.069
-    gonzData[:,5] = gonzData[:,5]/1.069
+    # gonzData[:,4] = (gonzData[:,4] + 0.689*0.012)/1.069
+    # gonzData[:,5] = gonzData[:,5]/1.069
 
     # Adjusting UKIRT H-K color to match 2MASS H-K_s
-    # map_data[:,16] = map_data[:,16]*1.062 + 0.017
-    # map_data[:,17] = map_data[:,17]*1.062
+    map_data[:,16] = map_data[:,16]*1.062 + 0.017
+    map_data[:,17] = map_data[:,17]*1.062
 
     if ccm:
         # Calculating the extinction using Cardelli 1989 law
-        ak = map_data[:,16] * 1.5
+        # Also subtracting 0.15 to convert from color to color excess
+        # Color of the RC assumed to be H-K = 0.15
+        ak = (map_data[:,16] - 0.15) * 1.5
         ak_error = map_data[:,17] * 1.5
     else:
-        ak = map_data[:,10] - 13.1
+        ak = map_data[:,10] - 12.93
         ak_error = map_data[:,11]
 
 
@@ -404,8 +420,8 @@ def plot_contour(map_data, path='figs/',figname='mag_contour_ccm.pdf', datafile=
     from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes
     from mpl_toolkits.axes_grid1.inset_locator import mark_inset
 
-    x1, x2, y1, y2 = 0.2, .9, 0.2, 0.9 # specify the limits of the zoom
-    axins = zoomed_inset_axes(ax, 2.4, loc='upper left') # zoom = 2
+    x1, x2, y1, y2 = 0.1, .8, 0.3, 1. # specify the limits of the zoom
+    axins = zoomed_inset_axes(ax, 2.3, loc='upper left') # zoom = 2
     axins.set_axisbelow(True)
 
     axins.scatter(ukirt_ak,gonz_ak,s=0.1,color='black')
@@ -452,10 +468,10 @@ def plot_ccm_comparison(map_data, path='figs/',figname='mag_contour_ccm.pdf'):
     
     
     # Calculating the extinction using Cardelli 1989 law
-    ak_cardelli = map_data[:,16] * 1.5
+    ak_cardelli = (map_data[:,16] - 0.15)*1.5
     ak_error_cardelli = map_data[:,17] * 1.5
 
-    ak_lum_fit = map_data[:,10] - 13.1
+    ak_lum_fit = map_data[:,10] - 12.93
     ak_error_lum_fit = map_data[:,11]
 
     plt.style.use('bmh')
@@ -517,8 +533,8 @@ def plot_ccm_comparison(map_data, path='figs/',figname='mag_contour_ccm.pdf'):
     # mark_inset(ax, axins, loc1=3, loc2=4, fc="none", ec="0")
 
     plt.show()
-    ipdb.set_trace()
-    print(np.max(ak_cardelli-ak_lum_fit))
+    # ipdb.set_trace()
+    print(np.max(ak_cardelli[~np.isnan(ak_cardelli)]-ak_lum_fit[~np.isnan(ak_cardelli)]))
 
 
 #------------------------------------------------------------------------------
@@ -533,7 +549,7 @@ if __name__=='__main__':
     # test_map = read_map('maps/map_PSF_2017_2_gonzGrid.map')
     test_map = read_map('maps/map_PSF_2017_2.map')
 
-    # plot_grid_map(test_map,func=rel_diff,axis=10,figname='UKIRTgonzDIFF_CAPPED.pdf',useangle=False)
+    # plot_grid_map(test_map,func=rel_diff,axis=16,figname='UKIRTgonzDIFF_CAPPED.pdf',useangle=False)
     import ipdb
 
     # Histogram differences using normal luminosity fitted extinction
@@ -543,8 +559,8 @@ if __name__=='__main__':
     # df = plot_differences_hist(test_map, func=rel_diff, axis=16, ccm=True)
 
     # plot_mags(test_map)
-    # plot_mag_card(test_map, cap=True, cap_value=1.5)
+    # plot_mag_card(test_map, cap=False, cap_value=1.5)
 
     # Creating a contour plot
-    # plot_contour(test_map, datafile='../data/gonz/gonzData_2018.dat', ccm=False)
+    # plot_contour(test_map, datafile='../data/gonz/gonzData_2018.dat', ccm=True)
     plot_ccm_comparison(test_map)

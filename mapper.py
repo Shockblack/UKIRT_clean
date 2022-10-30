@@ -1,4 +1,3 @@
-from operator import le
 import numpy as np
 from astropy import coordinates as coord
 from astropy import units as u
@@ -8,7 +7,7 @@ import RedClumpFinder as rcf
 import plotCMD as pcmd
 import random as ran
 import parameters as pram
-
+import lmfit
 class map:
     def __init__(self,edge_length=pram.arcmin/60.,year=pram.year,ra_lims=None,dec_lims=None):
         #limits in case we want to make a smaller map
@@ -63,7 +62,7 @@ class map:
     #function to generate pixel grid
     def gen_grid(self,grid_grow_scale=0.025):
         
-        #ipdb.set_trace()
+        # ipdb.set_trace()
         ra_span = self.ra_max-self.ra_min
         dec_span = self.dec_max-self.dec_min
 
@@ -101,7 +100,7 @@ class map:
         #Create array for the pixel centers
         self.grid_pixel_centers = []
 
-        ipdb.set_trace()
+        # ipdb.set_trace()
         #Load datafile with coordinates
         map_data = np.genfromtxt(filepath,delimiter=',').tolist()
 
@@ -233,38 +232,6 @@ class map:
                     except:
                         pass
 
-#                try:
-#                    rchisq = rcfinder.fit.redchi
-#                except:
-#                    print('NO RCHISQR')
-#
-#                numbins1=numbins-5
-#                M_RCguess = rcfinder.icMethod(numbins=numbins1)
-#                color_fit_vals = rcfinder.fitRCnew(rcf.redclumpOnlyExp,M_RC=M_RCguess)
-#                try:
-#                    rchisq1 = rcfinder.fit.redchi
-#                except:
-#                    print('NO RCHISQR1')
-#
-#                while abs(rchisq1-1)<abs(rchisq-1) and numbins > 20:
-#                    numbins=numbins1
-#                    M_RCguess = rcfinder.icMethod(numbins=numbins1)
-#                    color_fit_vals = rcfinder.fitRCnew(rcf.redclumpOnlyExp,M_RC=M_RCguess)
-#                    try:
-#                        rchisq = rcfinder.fit.redchi
-#                    except:
-#                        pass
-#
-#                    numbins1 = numbins - 5
-#                    M_RCguess = rcfinder.icMethod(numbins=numbins1)
-#                    color_fit_vals = rcfinder.fitRCnew(rcf.redclumpOnlyExp,M_RC=M_RCguess)
-#
-#                    try:
-#                        rchisq1 = rcfinder.fit.redchi 
-#                        if abs(rchisq1-1)>abs(rchisq-1) or rchisq == rchisq1:
-#                            print("REDCHI did not decrease!")
-#                    except:
-#                        pass
                 
                 if plotmag == True:
                     if i == ratio:
@@ -294,16 +261,29 @@ class map:
             else:
                 exit('Invalid method given')
             
-            
+            nan_error = False
             #self.pixels[-1].append(np.sqrt(self.pixels[-1][0]**2+self.pixels[-1][1]**2))
             j=0
             for key in rcfinder.fit.best_values.keys():
                 self.pixels[-1].append(rcfinder.fit.best_values[key])
                 try:
                     self.pixels[-1].append(np.sqrt(rcfinder.fit.covar[j,j]))
+                    # self.pixels[-1].append(rcfinder.fit.params[key].stderr)
                 except:
                     self.pixels[-1].append(float('NaN'))
+                    nan_error = True
+                    # print(lmfit.fit_report(rcfinder.fit.params))
+                    # ipdb.set_trace()
+                    print('No error for '+key+' in pixel '+str(i)+' at location '+str(pixel[2])+','+str(pixel[3]))
+                
                 j+=1
+                    
+            if nan_error:
+                cm_dict = {'altmag':[12,16],'delta':[-1,5]}
+                cmd.plotCMDhist(cm_dict=cm_dict, fit=rcfinder.fit.best_fit, plotsave=False)
+                color_fit_vals = rcfinder.fitRCnew(rcf.redclumpOnlyExp,M_RC=M_RCguess, method='nelder')
+                cmd.plotCMDhist(cm_dict=cm_dict, fit=rcfinder.fit.best_fit, plotsave=False)
+                
                 #ipdb.set_trace()
             for val in color_fit_vals:
                 self.pixels[-1].append(val)
@@ -432,14 +412,14 @@ if __name__=='__main__':
     #ipdb.set_trace()
     test_map = map(year=pram.year,edge_length=pram.arcmin/60.)#,ra_lims=[269,280],dec_lims=[-31,-26])#,ra_lims=[268.75,289.25],dec_lims=[-29.75,-29.25])
     test_map.get_fields_stats()
-    #test_map.gen_grid()
-    test_map.load_grid()
+    test_map.gen_grid()
+    # test_map.load_grid()
     test_map.filter_grid()
     #Converting inputs to strings so file name is automatically adjusted for inputs
     yearstr = str(pram.year)
     aminedge = str(pram.arcmin)
-    #filename = 'map_'+pram.phot+'_'+yearstr+'_'+aminedge
-    filename = 'map_'+pram.phot+'_'+yearstr+'_'+aminedge+'_gonzGrid'
+    filename = 'map_'+pram.phot+'_'+yearstr+'_'+aminedge
+    # filename = 'map_'+pram.phot+'_'+yearstr+'_'+aminedge+'_gonzGrid'
     #filename = 'inve_guess_2017_2'
     #ipdb.set_trace()
     test_map.fit_map(filebase=filename,plotmag=False,checkpix=True)

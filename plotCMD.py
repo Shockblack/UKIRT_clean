@@ -44,7 +44,7 @@ class cmd:
             return
 
 
-        self.limit_dict = {'N':[10,1e6],'altN':[3,1e6],'offset':[-0.1,0.1]}# {'mag':[12,15]}
+        self.limit_dict = {'N':[10,1e6],'altN':[3,1e6],'offset':[-0.1,0.1], 'altMAD':[-0.1,0.1], 'MAD':[-0.1,0.1]}# {'mag':[12,15]}
         self.getStars(limit_dict=self.limit_dict)
         self.cm_dict = {'altmag':[12,16],'delta':[-1,5]}
         #self.cm_dict = {'altmag':[12,16],'delta':[-1,5]}
@@ -454,7 +454,7 @@ class cmd:
 
         ax_hist_y.barh(xvals,yvals,color='dimgray',height=0.5*4/numbins)
         if type(fit) != type(None):
-            #ax_hist_y.plot(fit,xvals,color='black',linewidth=2)
+            ax_hist_y.plot(fit,xvals,color='black',linewidth=2)
             pass
         ax_hist_y.tick_params(axis="y", labelleft=False)
         
@@ -594,12 +594,16 @@ class cmd:
         ax.set_yscale('log')
         #plt.show()
 
-
 if __name__=='__main__':
     
     #ipdb.set_trace()
     #cmd_test = cmd('test.txt',268.5,-28.7,edge_length=240/60.)
+
+    # Creating plots for the paper using these two locations
+    # Center field
     cmd_test = cmd('test.txt',266.,-29.,edge_length=pram.arcmin/60.)
+    # Edge field
+    # cmd_test = cmd('test.txt',269.,-29.5,edge_length=pram.arcmin/60.)
 
     #cmd_test = cmd('test.txt',269.36695 , -28.98901,edge_length=pram.arcmin/60.)
     #cmd_test = cmd('test.txt',268.5,-29.7,edge_length=.1)
@@ -612,6 +616,16 @@ if __name__=='__main__':
     #ipdb.set_trace()
     limit_dict = {'N':[10,1e6],'altN':[3,1000]}# {'mag':[12,15]}
     cmd_test.getStars(limit_dict)
+
+    # import csv
+    # with open('../data/cmd_example.csv', 'w') as file:
+    #     # 2. step
+    #     writer = csv.writer(file)
+    #     # 3. step
+    #     for i in range(len(cmd_test.filterStarDict['altmag'])):
+    #         writer.writerow([cmd_test.filterStarDict['altmag'][i],cmd_test.filterStarDict['delta'][i]])
+
+    
     cm_dict = {'altmag':[12,16],'delta':[-1,5]}
     cmd_test.color_mag_cut(cm_dict,percentile_cut=True)
 
@@ -622,7 +636,7 @@ if __name__=='__main__':
     rcfinder=rcf.redclumpfinder(cmd_test)
     M_RCguess = rcfinder.icMethod()
     fit = rcfinder.fitRCMagnitude(rcf.redclumpOnlyExp, plotfit=False, M_RC=M_RCguess)
-    cmd_test.plotCMDhist(cm_dict,fit=fit)
+    cmd_test.plotCMDhist(cm_dict,fit=fit, plotsave=True, figdir='../misc_figs/CMD_Example_High.pdf')
     #cmd_test.histCMD(cm_dict,binnumber=25)
     #cmd_test.histMag(binnumber=100)
     #cmd_test.histColor(binnumber=100)
