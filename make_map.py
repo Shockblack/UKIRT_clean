@@ -169,12 +169,13 @@ def plot_grid_map(map_data,lb=True,func=do_nothing,axis=7,cb_label=r'$A(K)$',pat
 if __name__=='__main__':
 
     # test_map = read_map('maps/map_PSF_2017_2.map')
-    test_map = read_map('maps/mcmc_map_1000.map')
+    test_map = read_map('maps/mcmc_map_prop.map')
     # test_map = read_map('maps/field_pixel_data_21.map')
     # test_map = read_map('maps/map_PSF_2017_1.5_gonzGrid.map')
 
     #ipdb.set_trace()
     plot_grid_map(test_map,axis=6,func=A_K, figname='AK_PSF_2017_with_MAD.pdf')#[:1000])
+    # plot_grid_map(test_map,axis=10,func=A_K, figname='AK_PSF_2017_with_MAD.pdf')
     #plot_grid_map(test_map,func=do_nothing,axis=4,figname='gonzMapAll.pdf')#[:1000])
     #plot_grid_map(test_map,func=A_K,axis=10,figname='UKIRTgonzGrid.pdf',useangle=False)
     # plot_grid_map(test_map,func=rel_diff,axis=10,figname='UKIRTgonzDIFF_CAPPED.pdf',useangle=False)

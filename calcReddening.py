@@ -11,7 +11,7 @@
 
 # Importing other Python files from project
 import createCMD
-import RC_fitter
+import minimizer as RC_fitter
 import rc_mcmc
 from readData import readUKIRTfields
 
@@ -19,8 +19,8 @@ from readData import readUKIRTfields
 import numpy as np
 import parameters as pram
 from astropy import coordinates as coord
+from itertools import product
 from astropy import units as u
-import multiprocessing as mp
 import ipdb
 
 class mapper:
@@ -66,16 +66,16 @@ class mapper:
         ra_range = np.arange(ra_min, ra_max, self.edge_length)
         dec_range = np.arange(dec_min, dec_max, self.edge_length)
 
-
-        self.grid_pixel_centers = []
-
         #Calculates RA and DEC right when map files begins being made for earier use and to save time.
-        for ra in ra_range:
-            for dec in dec_range:
-                c = coord.SkyCoord(ra=ra*u.degree,dec=dec*u.degree ,frame='icrs')
-                l = c.galactic.l.degree
-                b = c.galactic.b.degree
-                self.grid_pixel_centers.append([ra,dec,l,b])
+        pairs = product(ra_range, dec_range)
+        results = np.array([list(pair) for pair in pairs if pair[0] != pair[1]])
+        c = coord.SkyCoord(ra=results[:,0]*u.degree,dec=results[:,1]*u.degree ,frame='icrs')
+        b = c.galactic.b.degree
+        b = b.reshape(len(b), 1)
+        l = c.galactic.l.degree
+        l = l.reshape(len(l), 1)
+
+        self.grid_pixel_centers = np.concatenate((results, l, b), axis=1).tolist()
 
         return
 
@@ -111,7 +111,6 @@ class mapper:
         self.dec_max = self.allDECmax.max()
 
         return
-
 
     def getNABStars(self, pixel_limits):
 
@@ -191,8 +190,6 @@ class mapper:
         
         # Deleting the stars over 3 MAD away
         self.NABStars = np.delete(self.NABStars, bad_ind)
-
-
 
     def calcDistWeights(self):
 
@@ -444,15 +441,26 @@ class mapper:
 
             i += 1
 
+            init_fit_params = [init_EWRC, init_B, init_M, init_sigma]
+
             # Get the color magnitude diagram for the pixel
             # The color-mag cuts are done initially already on this call
             cmd = createCMD.cmd(pixel[0],pixel[1],l=pixel[2],b=pixel[3],edge_length=self.edge_length)
             
+            # if pixel[3] > 0.5 or pixel[3] < -1.:
+            #     cm_dict = {'altmag': [12, 16], 'delta': [-1,5]}
+            #     cmd.color_mag_cut(cm_dict, percentile_cut=True)
+
             # Get the data for the fit
             fit_data = np.array([cmd.fitStarDict['altmag'],cmd.fitStarDict['delta']]).T
 
             # Run initial magnitude fit
-            best_fit_params = rc_mcmc.RC_MCMC(fit_data, init_EWRC, init_B, init_M, init_sigma)
+            # best_fit_params = rc_mcmc.RC_MCMC(fit_data, init_EWRC, init_B, init_M, init_sigma)
+            rc = RC_fitter.RedClump(cmd)
+            # _, best_fit_params, unc = rc.run_MCMC(cmd.fitStarDict['altmag'])
+            # if i == 65:
+                # ipdb.set_trace()
+            sampler, best_fit_params = rc.run_minimizer(cmd.fitStarDict['altmag'], init_fit_params)
 
             weights = RC_fitter.calcWeights(fit_data, best_fit_params['A'], best_fit_params['B'], best_fit_params['MRC'], best_fit_params['SIGMA'], best_fit_params['NRC'])
 
@@ -460,7 +468,7 @@ class mapper:
             color_fit_vals = RC_fitter.determineColor(fit_data,weights,init_color)
             k=0
             # Checking if the fit is in agreement with the initial guess
-            while abs(color_fit_vals[0] - init_color) > 0.03 and k < 5:
+            while abs(color_fit_vals[0] - init_color) > 0.03 and abs(init_M-best_fit_params['MRC']) > 0.05 and k < 5:
                 # Try and get a initial guess for Equivalece Width of RC, if not use 1.0 as default
                 try:
                     init_EWRC = best_fit_params['NRC']/best_fit_params['A']
@@ -471,21 +479,33 @@ class mapper:
                 init_sigma = best_fit_params['SIGMA']
                 init_color = color_fit_vals[0]
 
+                init_fit_params = [init_EWRC, init_B, init_M, init_sigma]
+
                 # Change the RC limits
-                cm_dict = {'altmag': [init_M-1.5, init_M+1.5], 'delta': [0.5*init_color, 5]}
-                cmd.color_mag_cut(cm_dict, percentile_cut=True)
+                # cm_dict = {'altmag': [init_M-1.5, init_M+1.5], 'delta': [0.5*init_color, 5]}
+                # cmd.color_mag_cut(cm_dict, percentile_cut=True)
 
                 # Get the data for the fit
-                fit_data = np.array([cmd.fitStarDict['altmag'],cmd.fitStarDict['delta']]).T
+                # fit_data = np.array([cmd.fitStarDict['altmag'],cmd.fitStarDict['delta']]).T
 
                 # Run initial magnitude fit
-                best_fit_params = rc_mcmc.RC_MCMC(fit_data, init_EWRC, init_B, init_M, init_sigma)
+                # best_fit_params = rc_mcmc.RC_MCMC(fit_data, init_EWRC, init_B, init_M, init_sigma)
+                # rc = RC_fitter.RedClump(cmd)
+                sampler, best_fit_params = rc.run_minimizer(cmd.fitStarDict['altmag'], init_fit_params)
+
                 weights = RC_fitter.calcWeights(fit_data, best_fit_params['A'], best_fit_params['B'], best_fit_params['MRC'], best_fit_params['SIGMA'], best_fit_params['NRC'])
                 # Running color fit
                 color_fit_vals = RC_fitter.determineColor(fit_data,weights,init_color)
 
                 k+=1
                 print("Color fit iteration: ", k)
+
+                if k == 5:
+                    ipdb.set_trace()
+            
+            init_fit_params = np.array([best_fit_params['EWRC'], best_fit_params['B'], best_fit_params['MRC'], best_fit_params['SIGMA']])
+            # Running mcmc to get the uncertainties
+            # sampler, best_fit_params, _ = rc.run_MCMC(cmd.fitStarDict['altmag'], init_fit_params)
 
             # Getting the best params and errors
             best_params = []
@@ -495,19 +515,6 @@ class mapper:
             # Getting the best color
             best_params.append(color_fit_vals[0])
             best_params.append(color_fit_vals[1])
-
-            # # Get the number of bins to use in the histogram for the MCMC fit
-            # num_bins = int(.05*len(cmd.fitStarDict['altmag']))
-
-            # # Initiate the MCMC fit
-            # rc = RC_fitter.RedClump(cmd, binnumber=num_bins)
-            # M, N, Nerr = rc.prepare_data_hist(cmd.fitStarDict['altmag'])
-            # sampler, pos, prob, state = rc.run_MCMC(M, N, Nerr)
-
-            # # Get the best fit parameters
-            # samples = sampler.flatchain
-            # best_ind = np.argmax(sampler.flatlnprobability)
-            # best_params = samples[best_ind]
 
             for param in best_params:
                 pixel.append(param)
@@ -547,11 +554,15 @@ if __name__ == "__main__":
     import pandas as pd
 
     ext_map = mapper()
+    print("Getting Field Stats")
     ext_map.get_fields_stats()
+    print("Generating Grid")
     ext_map.gen_grid()
+    print("Filtering Grid")
     ext_map.filter_grid()
+    print("Beginning Fit")
     ext_map.fit_map()
-    ext_map.saveMap()
+    ext_map.saveMap(filename = 'maps/mcmc_map_prop')
 
 
     # RC_limits_df = pd.read_csv('RC_limits_byEye.csv')

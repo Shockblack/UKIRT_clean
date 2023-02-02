@@ -145,7 +145,7 @@ class cmd:
 
             self.limit_dict = {'N':[10,1e6],'altN':[3,1e6],'offset':[-0.1,0.1]}
             if type(cm_dict)==type(None):
-                self.cm_dict = {'altmag':[12,16],'delta':[-1,5]}
+                self.cm_dict = {'altmag':[12,17],'delta':[-1,5]}
             else:
                 self.cm_dict = cm_dict
 

@@ -17,10 +17,11 @@
 
 from astropy import coordinates as coord
 from astropy import units as u
-from scipy import integrate, LowLevelCallable
+from scipy import integrate, LowLevelCallable, optimize
 import matplotlib.pyplot as plt
 import numpy as np
 import ipdb
+import lmfit
 
 import emcee
 import corner
@@ -45,6 +46,12 @@ class RedClump():
         self.N_obs = len(cmd.fitStarDict['altmag'])
 
         self.M, self.N, self.Nerr = self.prepare_data_hist(self.cmd.fitStarDict['altmag'])
+
+        # Importing the compiled C function to integrate
+        self.lib = ctypes.CDLL(os.path.abspath('integratelib.so'))
+        self.lib.f.restype = ctypes.c_double
+        self.lib.f.argtypes = (ctypes.c_int, ctypes.POINTER(ctypes.c_double), ctypes.c_void_p)
+
 
     def model_MCMC(self, theta, M):
         """The model for the MCMC fitting.
@@ -88,7 +95,7 @@ class RedClump():
         array
             Array of the model for the MCMC fitting.
         """
-        EWRC, B, M_RC, sigma_RC = theta
+        EWRC, B, M_RC, sigma_RC = theta['EWRC'].value, theta['B'].value, theta['MRC'].value, theta['SIGMA'].value
 
         A = self.A
 
@@ -163,22 +170,50 @@ class RedClump():
     def log_likelihood_nataf(self, theta, M):
         # import ipdb; ipdb.set_trace()
 
-        EWRC, B, M_RC, sigma_RC = theta
+        EWRC, B, M_RC, sigma_RC = theta['EWRC'].value, theta['B'].value, theta['MRC'].value, theta['SIGMA'].value
 
         # Preparing the scipy integrator in C
         py_vals = [EWRC, B, M_RC, sigma_RC]
+
+        self.value_tracker.append(py_vals)
+        # ipdb.set_trace()
         c_vals = (ctypes.c_double * len(py_vals))(*py_vals)
         user_data = ctypes.cast(ctypes.pointer(c_vals), ctypes.c_void_p)
         func = LowLevelCallable(self.lib.f, user_data)
 
         I = integrate.quad(func, self.cmd.cm_dict['altmag'][0], self.cmd.cm_dict['altmag'][1])
-        # ipdb.set_trace()
+        if I[0]==0:
+            ipdb.set_trace()
 
         self.A = self.N_obs/I[0]#self.integrator(EWRC, B, M_RC, sigma_RC, n=100)
 
         model = self.model_MCMC_nataf(theta, M)
 
         return np.sum(np.log(model))-self.N_obs
+
+    def log_likelihood_nataf_neg(self, theta, M):
+        # import ipdb; ipdb.set_trace()
+
+        EWRC, B, M_RC, sigma_RC = theta['EWRC'].value, theta['B'].value, theta['MRC'].value, theta['SIGMA'].value
+
+        # Preparing the scipy integrator in C
+        py_vals = [EWRC, B, M_RC, sigma_RC]
+
+        self.value_tracker.append(py_vals)
+        # ipdb.set_trace()
+        c_vals = (ctypes.c_double * len(py_vals))(*py_vals)
+        user_data = ctypes.cast(ctypes.pointer(c_vals), ctypes.c_void_p)
+        func = LowLevelCallable(self.lib.f, user_data)
+
+        I = integrate.quad(func, self.cmd.cm_dict['altmag'][0], self.cmd.cm_dict['altmag'][1])
+        if I[0]==0:
+            ipdb.set_trace()
+
+        self.A = self.N_obs/I[0]#self.integrator(EWRC, B, M_RC, sigma_RC, n=100)
+
+        model = self.model_MCMC_nataf(theta, M)
+
+        return -(np.sum(np.log(model))-self.N_obs)
 
     def log_probability(self, theta, M):#, N, Nerr):
         """The probability for the MCMC fitting.
@@ -232,7 +267,7 @@ class RedClump():
         
         return mags, Nstars, Nstars_err_guess
 
-    def run_MCMC(self, M):#, N, Nerr):
+    def run_MCMC(self, M, initial_guess=None):#, N, Nerr):
         """Runs the MCMC fitting.
 
         Parameters
@@ -252,13 +287,11 @@ class RedClump():
         array
             Array of the covariance matrix for the parameters.
         """
-        initial_guess = np.array([1.2,0.8,14,0.5])
-        p0 = [np.array(initial_guess) + np.random.randn(len(initial_guess)) for i in range(self.nwalkers)] #XXX
+        # Check if we are given an initial guess from Nelder-Mead
+        if type(initial_guess) == type(None):
+            initial_guess = np.array([1.2,0.8,14,0.5])
 
-        # Importing the compiled C function to integrate
-        self.lib = ctypes.CDLL(os.path.abspath('integratelib.so'))
-        self.lib.f.restype = ctypes.c_double
-        self.lib.f.argtypes = (ctypes.c_int, ctypes.POINTER(ctypes.c_double), ctypes.c_void_p)
+        p0 = [np.array(initial_guess) + np.random.randn(len(initial_guess)) for i in range(self.nwalkers)]
 
         sampler = emcee.EnsembleSampler(self.nwalkers, len(initial_guess), self.log_probability, args=(M, ))
 
@@ -324,6 +357,44 @@ class RedClump():
             I += luminosityFunction_EWRC(a+k*h, EWRC, B, M_RC, sigma_RC)
         I = I*h
         return I
+
+    def run_minimizer(self, M, initial_guess=None):
+
+        self.value_tracker = []
+
+        if type(initial_guess) == type(None):
+            initial_guess = np.array([1.2,0.8,14,0.5])
+
+        params = lmfit.Parameters()
+        params.add('EWRC', value=initial_guess[0], min=0.01, max=8.0)
+        params.add('B', value=initial_guess[1], min=0., max=8.0)
+        params.add('MRC', value=initial_guess[2], min=12., max=17.)
+        params.add('SIGMA', value=initial_guess[3], min=0.01, max=2.0)
+
+        mini = lmfit.Minimizer(self.log_likelihood_nataf_neg, params, fcn_args=(M, ))
+        results = mini.minimize(method='nelder')
+
+        del mini
+
+        best_params = [results.params['EWRC'].value, results.params['B'].value, results.params['MRC'].value, results.params['SIGMA'].value]
+
+        # Calculating the best integral
+        # Preparing the scipy integrator in C
+        c_vals = (ctypes.c_double * len(best_params))(*best_params)
+        user_data = ctypes.cast(ctypes.pointer(c_vals), ctypes.c_void_p)
+        func = LowLevelCallable(self.lib.f, user_data)
+
+        I = integrate.quad(func, self.cmd.cm_dict['altmag'][0], self.cmd.cm_dict['altmag'][1])
+
+        A = self.N_obs/I[0]
+
+        N_RC = A*best_params[0]
+
+        best_fit_params =    {'A':A, 'B':best_params[1], 'MRC':best_params[2], 'SIGMA':best_params[3], 'NRC':N_RC, 'EWRC':best_params[0]}
+
+        # results = optimize.minimize(self.log_likelihood_nataf, (1.2,0.8,14,0.5), args=(M,), method='Nelder-Mead', bounds=((0.01, 8), (0, 4), (12, 17), (0.1, 2)))
+        # ipdb.set_trace()
+        return results, best_fit_params
 
 #-----------------------------------------------------------------------
 # Components to the luminosity function for the number of stars at
@@ -620,35 +691,40 @@ def determineColor(data,weights,ColorRCinput):
 if __name__ == "__main__":
     
     tstart = time.time()
-    # cmd = createCMD.cmd(l=0,b=-0.5, edge_length=pram.arcmin/60.)
-    cmd = createCMD.cmd(263.585168,-29.938195, edge_length=pram.arcmin/60.)
-    rc_fitter = RedClump(cmd, binnumber=int(.05*len(cmd.fitStarDict['altmag'])), iterations=1000)
+    # cmd = createCMD.cmd(l=-2,b=1.5, edge_length=pram.arcmin/60.)
+    # cmd = createCMD.cmd(263.585168,-29.938195, edge_length=pram.arcmin/60.)
+    cmd = createCMD.cmd(265.685168,-27.238195, edge_length=pram.arcmin/60.)
+    rc_fitter = RedClump(cmd, binnumber=int(.05*len(cmd.fitStarDict['altmag'])), iterations=50000)
     M_dumb, N, Nerr = rc_fitter.prepare_data_hist(rc_fitter.cmd.fitStarDict['altmag'])
     M = rc_fitter.cmd.fitStarDict['altmag']
-    sampler, params, unc = rc_fitter.run_MCMC(M)
+
+    res, params = rc_fitter.run_minimizer(M)
+
+    print(res)
+    # ipdb.set_trace()
+    # sampler, params, unc = rc_fitter.run_MCMC(M)
     tstop = time.time()
     print('Time taken: ', tstop-tstart)
-
+    print(params)
     xval = np.linspace(12, 16, 1000)
 
-    best_ind = np.argmax(sampler.flatlnprobability)
-    samples = sampler.flatchain
-    best_params = samples[best_ind]
-    print('Best parameters: ', best_params)
-    
     plt.bar(M_dumb,N, color='dimgray', width=0.7*4/len(M_dumb))
     # for theta in samples[np.random.randint(len(samples), size=100)]:
         # plt.plot(M, rc_fitter.model_MCMC_nataf(theta, M), color="r", alpha=0.1)
-    best_model = rc_fitter.model_MCMC_nataf(best_params, xval)
+    best_model = rc_fitter.model_MCMC_nataf(res.params, xval)
     plt.plot(xval, best_model*4/len(M_dumb), color="k", lw=2, alpha=0.8)
     plt.xlabel('Magnitude')
     plt.ylabel(r'Number of Stars')
     plt.show()
 
+    # ipdb.set_trace()
+
     
 
-    labels = ['EWRC','B',r'$M_{RC}$',r'$\sigma_{RC}$',r'$N_{RC}$']
+    # labels = ['EWRC','B',r'$M_{RC}$',r'$\sigma_{RC}$',r'$N_{RC}$']
     plt.clf()
     fig = plt.figure(figsize=(7, 7))
-    fig = corner.corner(samples,show_titles=True,labels=labels,plot_datapoints=True,quantiles=[0.16, 0.5, 0.84], fig=fig)
+    # fig = corner.corner(samples,show_titles=True,labels=labels,plot_datapoints=True,quantiles=[0.16, 0.5, 0.84], fig=fig)
+    # plt.show()
+    emcee_plot = corner.corner(res.flatchain, show_titles=True, labels=res.var_names, plot_datapoints=True, quantiles=[0.16, 0.5, 0.84], fig=fig)#, truths=list(res.params.valuesdict().values()))
     plt.show()

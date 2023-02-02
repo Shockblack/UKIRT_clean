@@ -468,18 +468,26 @@ def plot_ccm_comparison(map_data, path='figs/',figname='mag_contour_ccm.pdf'):
     
     
     # Calculating the extinction using Cardelli 1989 law
-    ak_cardelli = (map_data[:,16] - 0.15)*1.5
-    ak_error_cardelli = map_data[:,17] * 1.5
+    # ak_cardelli = (map_data[:,16] - 0.15)*1.5
+    # ak_error_cardelli = map_data[:,17] * 1.5
 
-    ak_lum_fit = map_data[:,10] - 12.93
-    ak_error_lum_fit = map_data[:,11]
+    # ak_lum_fit = map_data[:,10] - 12.93
+    # ak_error_lum_fit = map_data[:,11]
+
+    # This is for testing new minimizer -------
+    ak_cardelli = (map_data[:,10] - 0.15)*1.5
+    # ak_error_cardelli = map_data[:,17] * 1.5
+
+    ak_lum_fit = map_data[:,6] - 12.93
+    # ak_error_lum_fit = map_data[:,11]
+    #------------------------------------------
 
     plt.style.use('bmh')
     fig, ax = plt.subplots()
     ax.set_axisbelow(True)
     # ipdb.set_trace()
-    ak_df = pd.DataFrame({'Cardelli':ak_cardelli, 'Luminosity':ak_lum_fit, \
-            'Cardelli_error':ak_error_cardelli, 'Luminosity_error':ak_error_lum_fit})
+    # ak_df = pd.DataFrame({'Cardelli':ak_cardelli, 'Luminosity':ak_lum_fit, \
+    #         'Cardelli_error':ak_error_cardelli, 'Luminosity_error':ak_error_lum_fit})
 
     ax.set_axisbelow(True)
     ax.yaxis.grid(color='gray')
@@ -491,8 +499,8 @@ def plot_ccm_comparison(map_data, path='figs/',figname='mag_contour_ccm.pdf'):
     plt.xlabel(r'$A(K)_{Cardelli}$')
     plt.ylabel(r'$A(K)_{Luminosity Fit}$')
 
-    plt.xlim(0,4)
-    plt.ylim(0,4)
+    plt.xlim(0,3.5)
+    plt.ylim(0,3.5)
 
     ax.plot([-0.1,4],[-0.1,4], color='red', linestyle='--', linewidth=1.0)
     
@@ -535,7 +543,7 @@ def plot_ccm_comparison(map_data, path='figs/',figname='mag_contour_ccm.pdf'):
     plt.show()
     # ipdb.set_trace()
     print(np.max(ak_cardelli[~np.isnan(ak_cardelli)]-ak_lum_fit[~np.isnan(ak_cardelli)]))
-
+    print(np.median(ak_cardelli[~np.isnan(ak_cardelli)]-ak_lum_fit[~np.isnan(ak_cardelli)]))
 
 #------------------------------------------------------------------------------
 
@@ -547,7 +555,8 @@ def reject_outliers(data, m=4):
 if __name__=='__main__':
 
     # test_map = read_map('maps/map_PSF_2017_2_gonzGrid.map')
-    test_map = read_map('maps/map_PSF_2017_2.map')
+    # test_map = read_map('maps/map_PSF_2017_2.map')
+    test_map = read_map('maps/mcmc_map_17lim.map')
 
     # plot_grid_map(test_map,func=rel_diff,axis=16,figname='UKIRTgonzDIFF_CAPPED.pdf',useangle=False)
     import ipdb

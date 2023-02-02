@@ -36,12 +36,14 @@ def relUncertaintyHist(map_data,axis=10):
 def generalHist(map_data,axis=14):
     header = ['RA','DEC','l','b','edgelength','N_stars','A','Aerr','B','Berr','M_RC','M_RCerr',\
         'sigma_RC','sigma_RCerr','N_RC','N_RCerr','FinalColorRC','RealSTDcolorOpt','STDtotal','VarianceMin','MU1opt','MU2opt']
+    # header = ['RA','DEC','l','b','A','B','M_RC','M_RCerr',\
+        # 'sigma_RC','sigma_RCerr','N_RC','N_RCerr','FinalColorRC','RealSTDcolorOpt','STDtotal','VarianceMin','MU1opt','MU2opt']
 
     values = [] #list to isolate specific axis
     for pixel in map_data:
         values.append(pixel[axis])
-    ipdb.set_trace()
-    bins = np.linspace(0,60,31)
+    # ipdb.set_trace()
+    bins = np.linspace(-0.1,1,31)
     vals,ubins = np.histogram(values,bins=bins)
     width = 0.7*(ubins[1]-ubins[0])
     xvals = (ubins[1:]+ubins[:-1])/2
@@ -55,5 +57,6 @@ def generalHist(map_data,axis=14):
     plt.show()
 
 if __name__ == "__main__":
+    # data = mm.read_map('maps/mcmc_map_prop.map')
     data = mm.read_map('maps/map_'+pram.phot+'_'+str(pram.year)+'_'+str(pram.arcmin)+'.map')
-    generalHist(data)
+    generalHist(data, axis=8)

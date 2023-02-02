@@ -601,11 +601,11 @@ if __name__=='__main__':
 
     # Creating plots for the paper using these two locations
     # Center field
-    cmd_test = cmd('test.txt',266.,-29.,edge_length=pram.arcmin/60.)
+    # cmd_test = cmd('test.txt',266.,-29.,edge_length=pram.arcmin/60.)
     # Edge field
     # cmd_test = cmd('test.txt',269.,-29.5,edge_length=pram.arcmin/60.)
 
-    #cmd_test = cmd('test.txt',269.36695 , -28.98901,edge_length=pram.arcmin/60.)
+    cmd_test = cmd('test.txt',267.0851676666696, -29.071528333333248,edge_length=pram.arcmin/60.)
     #cmd_test = cmd('test.txt',268.5,-29.7,edge_length=.1)
 
     #cmd_test = cmd('test.txt',267.,-30.5,edge_length=.1)
@@ -636,7 +636,7 @@ if __name__=='__main__':
     rcfinder=rcf.redclumpfinder(cmd_test)
     M_RCguess = rcfinder.icMethod()
     fit = rcfinder.fitRCMagnitude(rcf.redclumpOnlyExp, plotfit=False, M_RC=M_RCguess)
-    cmd_test.plotCMDhist(cm_dict,fit=fit, plotsave=True, figdir='../misc_figs/CMD_Example_High.pdf')
+    cmd_test.plotCMDhist(cm_dict,fit=fit, plotsave=False, figdir='../misc_figs/CMD_Example_High.pdf')
     #cmd_test.histCMD(cm_dict,binnumber=25)
     #cmd_test.histMag(binnumber=100)
     #cmd_test.histColor(binnumber=100)
