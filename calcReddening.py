@@ -445,7 +445,8 @@ class mapper:
 
             # Get the color magnitude diagram for the pixel
             # The color-mag cuts are done initially already on this call
-            cmd = createCMD.cmd(pixel[0],pixel[1],l=pixel[2],b=pixel[3],edge_length=self.edge_length)
+            cm_dict = {'altmag': [init_M-2., init_M+1.5], 'delta': [-1,5]}
+            cmd = createCMD.cmd(pixel[0],pixel[1],l=pixel[2],b=pixel[3],edge_length=self.edge_length, cm_dict = cm_dict)
             
             # if pixel[3] > 0.5 or pixel[3] < -1.:
             #     cm_dict = {'altmag': [12, 16], 'delta': [-1,5]}
@@ -482,11 +483,11 @@ class mapper:
                 init_fit_params = [init_EWRC, init_B, init_M, init_sigma]
 
                 # Change the RC limits
-                # cm_dict = {'altmag': [init_M-1.5, init_M+1.5], 'delta': [0.5*init_color, 5]}
-                # cmd.color_mag_cut(cm_dict, percentile_cut=True)
+                cm_dict = {'altmag': [init_M-2., init_M+1.5], 'delta': [-1,5]}
+                cmd.color_mag_cut(cm_dict, percentile_cut=True)
 
                 # Get the data for the fit
-                # fit_data = np.array([cmd.fitStarDict['altmag'],cmd.fitStarDict['delta']]).T
+                fit_data = np.array([cmd.fitStarDict['altmag'],cmd.fitStarDict['delta']]).T
 
                 # Run initial magnitude fit
                 # best_fit_params = rc_mcmc.RC_MCMC(fit_data, init_EWRC, init_B, init_M, init_sigma)
@@ -519,6 +520,10 @@ class mapper:
             for param in best_params:
                 pixel.append(param)
             
+            # If you need to debug the CMD, uncomment these two lines. 
+            # It will plot the CMD for the given pixel and fit, very useful.
+            # if i % 100 == 0:
+                # rc.plot()
 
             # Print out the progress
             print("Pixel ",i," of ",len(self.pixels)," complete.")
@@ -562,7 +567,7 @@ if __name__ == "__main__":
     ext_map.filter_grid()
     print("Beginning Fit")
     ext_map.fit_map()
-    ext_map.saveMap(filename = 'maps/mcmc_map_prop')
+    ext_map.saveMap(filename = 'maps/mcmc_map_1.5')
 
 
     # RC_limits_df = pd.read_csv('RC_limits_byEye.csv')

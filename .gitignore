@@ -15,3 +15,4 @@ plots_sam/
 *.code-workspace
 .DS_Store
 test.py
+test.ipynb

@@ -142,7 +142,7 @@ class cmd:
             self.dec_min = self.dec-self.edge_length/2.
 
             self.raw_field_inds = self.findFields(plot_fields=False)
-
+            # import ipdb; ipdb.set_trace()
             self.limit_dict = {'N':[10,1e6],'altN':[3,1e6],'offset':[-0.1,0.1]}
             if type(cm_dict)==type(None):
                 self.cm_dict = {'altmag':[12,17],'delta':[-1,5]}
@@ -540,6 +540,8 @@ class cmd:
         if type(limit_dict)==type(None):
             print('No limits on color or magnitude')
 
+        self.cm_dict = limit_dict
+
         # Make a boolean index array to initialize our color_mag cuts
         good_inds = np.ones(len(self.filterStarDict['mag']),dtype=bool) 
 
@@ -562,7 +564,12 @@ class cmd:
             high_inds = (self.filterStarDict['delta']) <= limit_dict['delta'][1]
 
             good_inds = good_inds & low_inds & high_inds
-        
+
+        try:
+            del self.fitStarDict
+        except:
+            pass
+
         self.fitStarDict = {}
         for key in self.filterStarDict.keys():
             self.fitStarDict[key] = self.filterStarDict[key][good_inds]

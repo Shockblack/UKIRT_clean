@@ -373,7 +373,7 @@ class RedClump():
 
         mini = lmfit.Minimizer(self.log_likelihood_nataf_neg, params, fcn_args=(M, ))
         results = mini.minimize(method='nelder')
-
+        self.results = results
         del mini
 
         best_params = [results.params['EWRC'].value, results.params['B'].value, results.params['MRC'].value, results.params['SIGMA'].value]
@@ -392,9 +392,25 @@ class RedClump():
 
         best_fit_params =    {'A':A, 'B':best_params[1], 'MRC':best_params[2], 'SIGMA':best_params[3], 'NRC':N_RC, 'EWRC':best_params[0]}
 
+        self.best_fit_params = best_fit_params
+
         # results = optimize.minimize(self.log_likelihood_nataf, (1.2,0.8,14,0.5), args=(M,), method='Nelder-Mead', bounds=((0.01, 8), (0, 4), (12, 17), (0.1, 2)))
         # ipdb.set_trace()
         return results, best_fit_params
+
+    def plot(self):
+        M_dumb, N, Nerr = self.prepare_data_hist(self.cmd.fitStarDict['altmag'])
+        
+        xval = np.linspace(12, 16, 1000)
+
+        plt.bar(M_dumb, N, color='dimgray', width=0.7*4/len(M_dumb))
+        best_model = self.model_MCMC_nataf(self.results.params, xval)
+        plt.plot(xval, best_model*4/len(M_dumb), color="k", lw=2, alpha=0.8)
+        plt.xlim(self.cmd.cm_dict['altmag'][0], self.cmd.cm_dict['altmag'][1])
+        plt.xlabel('Magnitude')
+        plt.ylabel(r'Number of Stars')
+        plt.show()
+
 
 #-----------------------------------------------------------------------
 # Components to the luminosity function for the number of stars at
