@@ -433,10 +433,15 @@ class mapper:
         # Loop over the pixel centers
         for i, pixel in enumerate(self.pixels):
 
-            # ipdb.set_trace()
+            # Get the initial guesses
 
-            initial_guess = predictions[i]
+            # Start by finding the closest pixel to the current pixel from our initial fit
+            distance = np.sqrt((pixel[0] - predictions[:,0])**2 + (pixel[1] - predictions[:,1])**2)
 
+            # Find the index of the pixel with the smallest distance
+            closest_pixel = np.argmin(distance)
+
+            initial_guess = predictions[closest_pixel]
             init_EWRC, init_B, init_M, init_sigma, init_color = initial_guess[4], initial_guess[5], initial_guess[6], initial_guess[7], initial_guess[8]
 
             i += 1
@@ -501,8 +506,8 @@ class mapper:
                 k+=1
                 print("Color fit iteration: ", k)
 
-                if k == 5:
-                    ipdb.set_trace()
+                # if k == 5:
+                    # ipdb.set_trace()
             
             init_fit_params = np.array([best_fit_params['EWRC'], best_fit_params['B'], best_fit_params['MRC'], best_fit_params['SIGMA']])
             # Running mcmc to get the uncertainties
@@ -567,7 +572,7 @@ if __name__ == "__main__":
     ext_map.filter_grid()
     print("Beginning Fit")
     ext_map.fit_map()
-    ext_map.saveMap(filename = 'maps/mcmc_map_1.5')
+    ext_map.saveMap(filename = 'maps/mcmc_map_1.5_Bconst')
 
 
     # RC_limits_df = pd.read_csv('RC_limits_byEye.csv')

@@ -367,7 +367,8 @@ class RedClump():
 
         params = lmfit.Parameters()
         params.add('EWRC', value=initial_guess[0], min=0.01, max=8.0)
-        params.add('B', value=initial_guess[1], min=0., max=8.0)
+        # params.add('B', value=initial_guess[1], min=0., max=8.0)
+        params.add('B', value=0.43, vary=False)
         params.add('MRC', value=initial_guess[2], min=12., max=17.)
         params.add('SIGMA', value=initial_guess[3], min=0.01, max=2.0)
 
