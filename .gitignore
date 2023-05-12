@@ -14,5 +14,4 @@ plots_sam/
 !.vscode/extensions.json
 *.code-workspace
 .DS_Store
-test.py
-test.ipynb
+test*

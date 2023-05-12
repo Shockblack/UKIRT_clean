@@ -36,15 +36,14 @@ def plot_grid_map(map_data, axis=10, cb_label=r'$A(K)$', path='figs/', figname='
 
     # Creating the plotting framework
     fig, ax = plt.subplots()
-    
     # Building the color bar
     good_data = map_data[:,axis][~np.isnan(map_data[:,axis])]
     cmap_max = np.max(good_data)
     cmap_min = np.min(good_data)
     cmap_max = np.percentile(good_data,99) 
     cmap_min = np.percentile(good_data,5)
-    # cmap_min = 0.1
-    # cmap_max = 1.8
+    cmap_min = 0.1
+    cmap_max = 2.5
 
     norm = matplotlib.colors.Normalize(vmin=cmap_min,vmax=cmap_max)
     cmap = cm.get_cmap('cividis_r')
@@ -78,9 +77,12 @@ def plot_grid_map(map_data, axis=10, cb_label=r'$A(K)$', path='figs/', figname='
 
 if __name__=='__main__':
     meta_map_data = []
-    map_data = read_map('maps/mcmc_map_prop.map')
+    map_data = read_map('maps/mcmc_small.map')
+    # map_data = read_map('maps/mcmc_map_1.5_Bconst.map')
     
-    map_data[:,6]=map_data[:,6]-12.93
+    # map_data[:,6]=map_data[:,6]-12.93
+    map_data[:,8]=map_data[:,8]-12.93
 
-    plot_grid_map(map_data,axis=5, cb_label='Fit Parameter, B')
+
+    plot_grid_map(map_data,axis=8, cb_label=r'$A(K)$')
     plt.show()

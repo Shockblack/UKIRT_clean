@@ -420,6 +420,18 @@ class mapper:
         self.edge_length = self.pixel_data['l'][0] - self.pixel_data['l'][1]
     
     def get_guesses(self, filename):
+        """Reads in the initial guesses from a data csv file
+
+        Parameters
+        ----------
+        filename : str
+            The filename and location of the data file
+
+        Returns
+        -------
+        np.array
+            An array of the initial guesses
+        """
         predictions = np.loadtxt(filename, delimiter=',')
         return predictions
 
@@ -428,11 +440,9 @@ class mapper:
         # Getting the guesses from the initial fit file
         # Array needs to be reversed since it was generated in reverse order (sorry)
         predictions = self.get_guesses('../data/predictions.csv')
-        predictions = np.flip(predictions, axis=0) # reversal
 
         # Loop over the pixel centers
         for i, pixel in enumerate(self.pixels):
-
             # Get the initial guesses
 
             # Start by finding the closest pixel to the current pixel from our initial fit
@@ -456,13 +466,14 @@ class mapper:
             # if pixel[3] > 0.5 or pixel[3] < -1.:
             #     cm_dict = {'altmag': [12, 16], 'delta': [-1,5]}
             #     cmd.color_mag_cut(cm_dict, percentile_cut=True)
-
+            print('Location:', pixel[0], ', ' , pixel[1])
+            print('Total stars:', len(cmd.fitStarDict['altmag']))
             # Get the data for the fit
             fit_data = np.array([cmd.fitStarDict['altmag'],cmd.fitStarDict['delta']]).T
 
             # Run initial magnitude fit
             # best_fit_params = rc_mcmc.RC_MCMC(fit_data, init_EWRC, init_B, init_M, init_sigma)
-            rc = RC_fitter.RedClump(cmd)
+            rc = RC_fitter.RedClump(cmd, iterations=100000)
             # _, best_fit_params, unc = rc.run_MCMC(cmd.fitStarDict['altmag'])
             # if i == 65:
                 # ipdb.set_trace()
@@ -511,7 +522,20 @@ class mapper:
             
             init_fit_params = np.array([best_fit_params['EWRC'], best_fit_params['B'], best_fit_params['MRC'], best_fit_params['SIGMA']])
             # Running mcmc to get the uncertainties
-            # sampler, best_fit_params, _ = rc.run_MCMC(cmd.fitStarDict['altmag'], init_fit_params)
+            print("Initial guess: ", init_fit_params)
+            sampler, best_fit_params, _ = rc.run_MCMC(cmd.fitStarDict['altmag'], init_fit_params)
+            import corner
+            import matplotlib.pyplot as plt
+            fig = plt.figure(figsize=(7, 7))
+            emcee_plot = corner.corner(sampler.flatchain, show_titles=True, labels=['EWRC', 'B', 'M_RC', 'sigma'], plot_datapoints=True, quantiles=[0.16, 0.5, 0.84], fig=fig, truths=list(init_fit_params))
+            print("Initial guess: ", init_fit_params)
+            print("Best fit: ", best_fit_params)
+            plt.show()
+
+            plt.clf()
+            rc.plot()
+            
+            # ipdb.set_trace()
 
             # Getting the best params and errors
             best_params = []
@@ -541,6 +565,9 @@ class mapper:
 
         return
 
+    def run_mcmc(self, map_file = None):
+        return
+
     def saveMap(self, path = 'maps/', filename = 'maps/mcmc_map'):
         header = 'RA,DEC,l,b,edgelength,N_stars,A,Aerr,B,Berr,M_RC,M_RCerr,sigma_RC,sigma_RCerr,N_RC,N_RCerr,FinalColorRC,RealSTDcolorOpt,STDtotal,VarianceMin,MU1opt,MU2opt'
         #date 
@@ -563,7 +590,7 @@ class mapper:
 if __name__ == "__main__":
     import pandas as pd
 
-    ext_map = mapper()
+    ext_map = mapper(ra_lims=[266,267], dec_lims=[-30,-28])
     print("Getting Field Stats")
     ext_map.get_fields_stats()
     print("Generating Grid")
@@ -572,7 +599,9 @@ if __name__ == "__main__":
     ext_map.filter_grid()
     print("Beginning Fit")
     ext_map.fit_map()
-    ext_map.saveMap(filename = 'maps/mcmc_map_1.5_Bconst')
+    filename = 'maps/mcmc_small'
+    ext_map.saveMap(filename = filename)
+
 
 
     # RC_limits_df = pd.read_csv('RC_limits_byEye.csv')
