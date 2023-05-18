@@ -37,7 +37,7 @@ import createCMD
 sqrt2pi = np.sqrt(2*np.pi)
 
 class RedClump():
-    def __init__(self, cmd, binnumber=100, nwalkers=50, iterations=1000, burnin=100):
+    def __init__(self, cmd, nwalkers=50, iterations=1000, burnin=100):
         self.cmd = cmd
         self.binnumber = int(.05*len(cmd.fitStarDict['altmag']))
         self.nwalkers = nwalkers
@@ -46,12 +46,12 @@ class RedClump():
 
         self.N_obs = len(cmd.fitStarDict['altmag'])
 
-        self.M, self.N, self.Nerr = self.prepare_data_hist(self.cmd.fitStarDict['altmag'])
-
+        #-------------DEPRECATED----------------#
         # Importing the compiled C function to integrate
-        self.lib = ctypes.CDLL(os.path.abspath('integratelib.so'))
-        self.lib.f.restype = ctypes.c_double
-        self.lib.f.argtypes = (ctypes.c_int, ctypes.POINTER(ctypes.c_double), ctypes.c_void_p)
+        # self.lib = ctypes.CDLL(os.path.abspath('integratelib.so'))
+        # self.lib.f.restype = ctypes.c_double
+        # self.lib.f.argtypes = (ctypes.c_int, ctypes.POINTER(ctypes.c_double), ctypes.c_void_p)
+        #---------------------------------------#
 
 
     def model_MCMC(self, theta, M):
@@ -106,7 +106,7 @@ class RedClump():
 
         return luminosityFunction(M,A,B,M_RC,sigma_RC,N_RC)
     
-    def model_lmfit(self, theta, M):
+    def model_lmfit(self, theta, M, method=None):
         """The model for the MCMC fitting.
 
         Parameters
@@ -126,7 +126,12 @@ class RedClump():
         except:
             EWRC, B, M_RC, sigma_RC = theta['EWRC'], theta['B'], theta['MRC'], theta['SIGMA']
 
-        A = self.A
+        if method == 'nm':
+            A = self.A_nm
+        elif method == 'mc':
+            A = self.A_mc
+        else:
+            A = self.A
 
         N_RC = EWRC*A
 
@@ -167,7 +172,7 @@ class RedClump():
             The log of the prior.
         """
         EWRC, B, M_RC, sigma_RC = theta
-        if (0. < EWRC < 10. and 0.42999 <= B < .43001 and 12. < M_RC < 17. and 0. < sigma_RC < .5):
+        if (0. < EWRC < 10. and 0.42999 <= B < .43001 and 12. < M_RC < 17. and 0. < sigma_RC < 1.):
             return 0.0
         return -np.inf
 
@@ -204,15 +209,14 @@ class RedClump():
         # Preparing the scipy integrator in C
         py_vals = [EWRC, B, M_RC, sigma_RC]
 
-        self.value_tracker.append(py_vals)
         # ipdb.set_trace()
-        c_vals = (ctypes.c_double * len(py_vals))(*py_vals)
-        user_data = ctypes.cast(ctypes.pointer(c_vals), ctypes.c_void_p)
-        func = LowLevelCallable(self.lib.f, user_data)
+        # c_vals = (ctypes.c_double * len(py_vals))(*py_vals)
+        # user_data = ctypes.cast(ctypes.pointer(c_vals), ctypes.c_void_p)
+        # func = LowLevelCallable(self.lib.f, user_data)
 
-        I = integrate.quad(func, self.cmd.cm_dict['altmag'][0], self.cmd.cm_dict['altmag'][1])
-        if I[0]==0:
-            ipdb.set_trace()
+        # I = integrate.quad(func, self.cmd.cm_dict['altmag'][0], self.cmd.cm_dict['altmag'][1])
+        # if I[0]==0:
+        #     ipdb.set_trace()
 
         self.I = self.integrator(EWRC, B, M_RC, sigma_RC)
         self.A = self.N_obs/self.I
@@ -230,14 +234,14 @@ class RedClump():
 
         self.value_tracker.append(py_vals)
         # ipdb.set_trace()
-        c_vals = (ctypes.c_double * len(py_vals))(*py_vals)
-        user_data = ctypes.cast(ctypes.pointer(c_vals), ctypes.c_void_p)
-        func = LowLevelCallable(self.lib.f, user_data)
+        # c_vals = (ctypes.c_double * len(py_vals))(*py_vals)
+        # user_data = ctypes.cast(ctypes.pointer(c_vals), ctypes.c_void_p)
+        # func = LowLevelCallable(self.lib.f, user_data)
 
-        I = integrate.quad(func, self.cmd.cm_dict['altmag'][0], self.cmd.cm_dict['altmag'][1])
-        if I[0]==0:
-            ipdb.set_trace()
-        self.I = I[0]
+        # I = integrate.quad(func, self.cmd.cm_dict['altmag'][0], self.cmd.cm_dict['altmag'][1])
+        # if I[0]==0:
+        #     ipdb.set_trace()
+        # self.I = I[0]
         self.I = self.integrator(EWRC, B, M_RC, sigma_RC)
         self.A = self.N_obs/self.I
         model = self.model_lmfit(theta, M)
@@ -290,11 +294,8 @@ class RedClump():
         Nstars, hist_bins = np.histogram(M,bins)#'fd')
 
         mags = (hist_bins[1:]+hist_bins[:-1])/2
-        Nstars_err_guess = np.sqrt(Nstars)
-
-        Nstars_err_guess[Nstars_err_guess == 0] = 5
         
-        return mags, Nstars, Nstars_err_guess
+        return mags, Nstars
 
     def run_MCMC(self, M, initial_guess=None):#, N, Nerr):
         """Runs the MCMC fitting.
@@ -318,9 +319,9 @@ class RedClump():
         """
         # Check if we are given an initial guess from Nelder-Mead
         if type(initial_guess) == type(None):
-            initial_guess = np.array([1.2,0.43,14,0.5])
-        if initial_guess[3] > 0.49:
-            initial_guess[3] = 0.45
+            initial_guess = np.array([2.,0.43,14,0.5])
+        # if initial_guess[3] > 0.49:
+        #     initial_guess[3] = 0.45
         
         self.initial_guess = initial_guess
         # p0 = [np.array(initial_guess) + 0.05*np.array(initial_guess)*np.random.randn(len(initial_guess)) for i in range(self.nwalkers)]
@@ -349,7 +350,7 @@ class RedClump():
             # if it isn't trustworthy
             tau = sampler.get_autocorr_time(tol=0)
             
-            print(tau)
+            
             autocorr[i] = np.mean(tau)
             i += 1
             
@@ -378,44 +379,38 @@ class RedClump():
 
         # Calculating the best integral
         # Preparing the scipy integrator in C
-        c_vals = (ctypes.c_double * len(best_params))(*best_params)
-        user_data = ctypes.cast(ctypes.pointer(c_vals), ctypes.c_void_p)
-        func = LowLevelCallable(self.lib.f, user_data)
+        # c_vals = (ctypes.c_double * len(best_params))(*best_params)
+        # user_data = ctypes.cast(ctypes.pointer(c_vals), ctypes.c_void_p)
+        # func = LowLevelCallable(self.lib.f, user_data)
 
-        I = integrate.quad(func, self.cmd.cm_dict['altmag'][0], self.cmd.cm_dict['altmag'][1])
+        # I = integrate.quad(func, self.cmd.cm_dict['altmag'][0], self.cmd.cm_dict['altmag'][1])
         self.I = self.integrator(best_params[0], best_params[1], best_params[2], best_params[3])
         A = self.N_obs/self.I#I[0]
+        self.A = A
+        self.A_mc = A
         # Propogating the error
-        A_err = A*np.sqrt( (np.sqrt(self.N_obs)/self.N_obs)**2 + (I[1]/I[0])**2 )
+        # A_err = A*np.sqrt( (np.sqrt(self.N_obs)/self.N_obs)**2 + (I[1]/I[0])**2 )
         N_RC = A*best_params[0]
-        N_RC_err = N_RC*np.sqrt((A_err/A)**2 + (unc[0]/best_params[0])**2)
+        # N_RC_err = N_RC*np.sqrt((A_err/A)**2 + (unc[0]/best_params[0])**2)
+        A_err = 0.
+        N_RC_err = 0.
 
         params =    {'A':A, 'A_err':A_err, 'B':best_params[1], 'B_err':unc[1], 'MRC':best_params[2], 'MRC_err':unc[2], \
-                    'SIGMA':best_params[3], 'SIGMA_err':unc[3], 'NRC':N_RC, 'NRC_err':N_RC_err}
+                    'SIGMA':best_params[3], 'SIGMA_err':unc[3], 'NRC':N_RC, 'NRC_err':N_RC_err, 'EWRC':best_params[0], 'EWRC_err':unc[0]}
 
         self.mcmc_params = {'EWRC':best_params[0], 'B':best_params[1], 'MRC':best_params[2], 'SIGMA':best_params[3]}
 
         return sampler, params, unc
 
-    def fit(self):
-        M, N, Nerr = self.prepare_data_hist(self.cmd.fitStarDict['altmag'])
-        sampler, pos, prob, state = self.run_MCMC(M, N, Nerr)
-        best_ind = np.argmax(sampler.flatlnprobability)
-        samples = sampler.flatchain
-        best_params = samples[best_ind]
-        return best_params
-
-    def find_color(self):
-        return
 
     def integrator(self, EWRC, B, M_RC, sigma_RC):
         """
         Integrates the luminosity function to find the normalization constant A
-        using the trapezoidal rule.
+        by solving the definite integral and plugging in the bounds of the fit data.
         """
         min_K = self.cmd.cm_dict['altmag'][0]
         max_K = self.cmd.cm_dict['altmag'][1]
-        
+
         term1 = BackgroundExp_NoA(B, max_K, M_RC)/B - BackgroundExp_NoA(B, min_K, M_RC)/B
         term2 = EWRC/2 * (erf((max_K-M_RC)/(np.sqrt(2)*sigma_RC)) - erf((min_K-M_RC)/(np.sqrt(2)*sigma_RC)))
         EWRGBB = 0.201*EWRC
@@ -431,61 +426,66 @@ class RedClump():
         self.value_tracker = []
 
         if type(initial_guess) == type(None):
-            initial_guess = np.array([1.2,0.8,14,0.5])
+            initial_guess = np.array([2.,0.43,14,0.5])
 
-        if initial_guess[3] > 0.49:
-            initial_guess[3] = 0.49
+        # if initial_guess[3] > 0.49:
+        #     initial_guess[3] = 0.49
 
         params = lmfit.Parameters()
-        params.add('EWRC', value=initial_guess[0], min=0.01, max=8.0)
+        params.add('EWRC', value=initial_guess[0], min=0.01, max=10.0)
         # params.add('B', value=initial_guess[1], min=0., max=8.0)
         params.add('B', value=0.43, vary=False)
         params.add('MRC', value=initial_guess[2], min=12., max=17.)
-        params.add('SIGMA', value=initial_guess[3], min=0.01, max=2.0)
-
+        params.add('SIGMA', value=initial_guess[3], min=0.01, max=1.)
+        
         mini = lmfit.Minimizer(self.log_likelihood_nataf_neg, params, fcn_args=(M, ))
         results = mini.minimize(method='nelder')
         self.results = results
         del mini
 
         best_params = [results.params['EWRC'].value, results.params['B'].value, results.params['MRC'].value, results.params['SIGMA'].value]
-
+        
         # Calculating the best integral
         # Preparing the scipy integrator in C
-        c_vals = (ctypes.c_double * len(best_params))(*best_params)
-        user_data = ctypes.cast(ctypes.pointer(c_vals), ctypes.c_void_p)
-        func = LowLevelCallable(self.lib.f, user_data)
+        # c_vals = (ctypes.c_double * len(best_params))(*best_params)
+        # user_data = ctypes.cast(ctypes.pointer(c_vals), ctypes.c_void_p)
+        # func = LowLevelCallable(self.lib.f, user_data)
 
-        I = integrate.quad(func, self.cmd.cm_dict['altmag'][0], self.cmd.cm_dict['altmag'][1])
+        # I = integrate.quad(func, self.cmd.cm_dict['altmag'][0], self.cmd.cm_dict['altmag'][1])
 
         # A = self.N_obs/I[0]
         I = self.integrator(best_params[0], best_params[1], best_params[2], best_params[3])
-        A = self.N_obs/I
-        N_RC = A*best_params[0]
+        self.A = self.N_obs/I
+        N_RC = self.A*best_params[0]
+        
+        self.I_nm = I
+        self.A_nm = self.A
+        self.N_RC_nm = N_RC
 
-        best_fit_params =    {'A':A, 'B':best_params[1], 'MRC':best_params[2], 'SIGMA':best_params[3], 'NRC':N_RC, 'EWRC':best_params[0]}
+        best_fit_params =    {'A':self.A, 'B':best_params[1], 'MRC':best_params[2], 'SIGMA':best_params[3], 'NRC':N_RC, 'EWRC':best_params[0]}
 
         self.best_fit_params = best_fit_params
 
-        # results = optimize.minimize(self.log_likelihood_nataf, (1.2,0.8,14,0.5), args=(M,), method='Nelder-Mead', bounds=((0.01, 8), (0, 4), (12, 17), (0.1, 2)))
-        # ipdb.set_trace()
         return results, best_fit_params
 
     def plot(self):
-        M_dumb, N, Nerr = self.prepare_data_hist(self.cmd.fitStarDict['altmag'])
+        M_dumb, N = self.prepare_data_hist(self.cmd.fitStarDict['altmag'])
         
         xval = np.linspace(self.cmd.cm_dict['altmag'][0], self.cmd.cm_dict['altmag'][1], 1000)
+        # xval = np.linspace(12, 17, 1000)
         # ipdb.set_trace()
         x_range = abs(self.cmd.cm_dict['altmag'][1] - self.cmd.cm_dict['altmag'][0])
+        # x_range = abs(17 - 12)
 
         plt.bar(M_dumb, N, color='dimgray', width=0.7*x_range/len(M_dumb))
-        print('Best fit parameters: ', self.mcmc_params)
-        print('Initial guess parameters: ', self.results.params)
-        best_model = self.model_lmfit(self.mcmc_params, xval)
-        initial_model = self.model_lmfit(self.results.params, xval)
+
+        initial_model = self.model_lmfit(self.results.params, xval, method='nm')
+        best_model = self.model_lmfit(self.mcmc_params, xval, method='mc')
+
         plt.plot(xval, best_model*x_range/len(M_dumb), color="k", lw=2, alpha=0.8, label='MCMC Fit')
         plt.plot(xval, initial_model*x_range/len(M_dumb), color="r", lw=2, alpha=0.8, label='Nelder-Mead Guess', ls='--')
         plt.xlim(self.cmd.cm_dict['altmag'][0], self.cmd.cm_dict['altmag'][1])
+        # plt.xlim(12, 17)
         plt.xlabel('Magnitude')
         plt.ylabel(r'Number of Stars')
         plt.legend()
@@ -791,17 +791,16 @@ if __name__ == "__main__":
     # cmd = createCMD.cmd(263.585168,-29.938195, edge_length=pram.arcmin/60.)
     cmd = createCMD.cmd(265.685168,-27.238195, edge_length=pram.arcmin/60.)
     rc_fitter = RedClump(cmd, binnumber=int(.05*len(cmd.fitStarDict['altmag'])), iterations=50000)
-    M_dumb, N, Nerr = rc_fitter.prepare_data_hist(rc_fitter.cmd.fitStarDict['altmag'])
+    M_dumb, N = rc_fitter.prepare_data_hist(rc_fitter.cmd.fitStarDict['altmag'])
     M = rc_fitter.cmd.fitStarDict['altmag']
 
     res, params = rc_fitter.run_minimizer(M)
 
-    print(res)
     # ipdb.set_trace()
     # sampler, params, unc = rc_fitter.run_MCMC(M)
     tstop = time.time()
     print('Time taken: ', tstop-tstart)
-    print(params)
+    
     xval = np.linspace(12, 16, 1000)
 
     plt.bar(M_dumb,N, color='dimgray', width=0.7*4/len(M_dumb))

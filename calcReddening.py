@@ -22,6 +22,9 @@ from astropy import coordinates as coord
 from itertools import product
 from astropy import units as u
 import ipdb
+import warnings
+
+warnings.filterwarnings('ignore', category=RuntimeWarning)
 
 class mapper:
     def  __init__(self, cmdclass=None, year=pram.year, field_ind=0, num_pixels=128,ra_lims=None,dec_lims=None):
@@ -463,27 +466,26 @@ class mapper:
             cm_dict = {'altmag': [init_M-2., init_M+1.5], 'delta': [-1,5]}
             cmd = createCMD.cmd(pixel[0],pixel[1],l=pixel[2],b=pixel[3],edge_length=self.edge_length, cm_dict = cm_dict)
             
-            # if pixel[3] > 0.5 or pixel[3] < -1.:
-            #     cm_dict = {'altmag': [12, 16], 'delta': [-1,5]}
-            #     cmd.color_mag_cut(cm_dict, percentile_cut=True)
-            print('Location:', pixel[0], ', ' , pixel[1])
-            print('Total stars:', len(cmd.fitStarDict['altmag']))
+            
+            # print('Location:', pixel[0], ', ' , pixel[1])
+            # print('Total stars:', len(cmd.fitStarDict['altmag']))
             # Get the data for the fit
             fit_data = np.array([cmd.fitStarDict['altmag'],cmd.fitStarDict['delta']]).T
 
             # Run initial magnitude fit
-            # best_fit_params = rc_mcmc.RC_MCMC(fit_data, init_EWRC, init_B, init_M, init_sigma)
+            
             rc = RC_fitter.RedClump(cmd, iterations=100000)
-            # _, best_fit_params, unc = rc.run_MCMC(cmd.fitStarDict['altmag'])
-            # if i == 65:
-                # ipdb.set_trace()
+            
             sampler, best_fit_params = rc.run_minimizer(cmd.fitStarDict['altmag'], init_fit_params)
 
             weights = RC_fitter.calcWeights(fit_data, best_fit_params['A'], best_fit_params['B'], best_fit_params['MRC'], best_fit_params['SIGMA'], best_fit_params['NRC'])
 
             # Running color fit
             color_fit_vals = RC_fitter.determineColor(fit_data,weights,init_color)
+
+            # Counter for number of times the fit is run
             k=0
+
             # Checking if the fit is in agreement with the initial guess
             while abs(color_fit_vals[0] - init_color) > 0.03 and abs(init_M-best_fit_params['MRC']) > 0.05 and k < 5:
                 # Try and get a initial guess for Equivalece Width of RC, if not use 1.0 as default
@@ -522,20 +524,20 @@ class mapper:
             
             init_fit_params = np.array([best_fit_params['EWRC'], best_fit_params['B'], best_fit_params['MRC'], best_fit_params['SIGMA']])
             # Running mcmc to get the uncertainties
-            print("Initial guess: ", init_fit_params)
+            # print("Initial guess: ", init_fit_params)
             sampler, best_fit_params, _ = rc.run_MCMC(cmd.fitStarDict['altmag'], init_fit_params)
-            import corner
-            import matplotlib.pyplot as plt
-            fig = plt.figure(figsize=(7, 7))
-            emcee_plot = corner.corner(sampler.flatchain, show_titles=True, labels=['EWRC', 'B', 'M_RC', 'sigma'], plot_datapoints=True, quantiles=[0.16, 0.5, 0.84], fig=fig, truths=list(init_fit_params))
-            print("Initial guess: ", init_fit_params)
-            print("Best fit: ", best_fit_params)
-            plt.show()
 
-            plt.clf()
-            rc.plot()
-            
-            # ipdb.set_trace()
+            # Set to True if you want to plot the fits
+            if False:
+                import corner
+                import matplotlib.pyplot as plt
+
+                fig = plt.figure(figsize=(7, 7))
+                emcee_plot = corner.corner(sampler.flatchain, show_titles=True, labels=['EWRC', 'B', 'M_RC', 'sigma'], plot_datapoints=True, quantiles=[0.16, 0.5, 0.84], fig=fig, truths=list(init_fit_params))
+                plt.show()
+                plt.clf()
+
+                rc.plot()
 
             # Getting the best params and errors
             best_params = []
@@ -556,7 +558,9 @@ class mapper:
 
             # Print out the progress
             print("Pixel ",i," of ",len(self.pixels)," complete.")
-            print("Best fit parameters: ",self.pixels[i-1][4:])
+            print(f"Nelder-Mead Params:\t[EWRC: {init_fit_params[0]:.4f}, K_RC: {init_fit_params[2]:.4f}, SIGMA: {init_fit_params[3]:.4f}]")
+            print(f"MCMC Params:\t\t[EWRC: {best_fit_params['EWRC']:.4f}, K_RC: {best_fit_params['MRC']:.4f}, SIGMA: {best_fit_params['SIGMA']:.4f}]\n")
+            
 
             if i %1000 == 0:
                 self.saveMap(filename='maps/mcmc_map_'+str(i))
@@ -597,7 +601,7 @@ if __name__ == "__main__":
     ext_map.gen_grid()
     print("Filtering Grid")
     ext_map.filter_grid()
-    print("Beginning Fit")
+    print("Beginning Fit\n")
     ext_map.fit_map()
     filename = 'maps/mcmc_small'
     ext_map.saveMap(filename = filename)
