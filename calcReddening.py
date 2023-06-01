@@ -438,11 +438,123 @@ class mapper:
         predictions = np.loadtxt(filename, delimiter=',')
         return predictions
 
+    @staticmethod
+    def fit_pixel(self, pixel_info, pixel_index):
+        """
+        Function which fits a single pixel to be fed into the multiprocessing pool.
+        Runs both the magnitude fit (Nelder-Mean minimization and the MCMC sampling)
+        as well as the color fit.
+
+        Parameters
+        ----------
+        pixel_info : tuple
+            A tuple containing the pixel information for the pixel to be fit.
+            The tuple must be in the form (pixel_index, pixel_info) where pixel_info
+            is a tuple containing the pixel information in the form (ra, dec, l, b).
+
+        Returns
+        -------
+        pixel : tuple
+            A tuple containing the pixel location and fit parameters for the pixel.
+        """
+        pixel = pixel_info
+        i = pixel_index
+        
+        # Start by finding the closest pixel to the current pixel from our initial fit
+        distance = np.sqrt((pixel[0] - self.predictions[:,0])**2 + (pixel[1] - self.predictions[:,1])**2)
+
+        # Find the index of the pixel with the smallest distance
+        closest_pixel = np.argmin(distance)
+        initial_guess = self.predictions[closest_pixel]
+        init_EWRC, init_B, init_M, init_sigma, init_color = initial_guess[4], initial_guess[5], initial_guess[6], initial_guess[7], initial_guess[8]
+
+
+        init_fit_params = [init_EWRC, init_B, init_M, init_sigma]
+
+
+        # Get the color magnitude diagram for the pixel
+        # The color-mag cuts are done initially already on this call
+        cm_dict = {'altmag': [init_M-2., init_M+1.5], 'delta': [-1,5]}
+        cmd = createCMD.cmd(pixel[0],pixel[1],l=pixel[2],b=pixel[3],edge_length=self.edge_length, cm_dict = cm_dict)
+        
+        # Get the data for the fit
+        fit_data = np.array([cmd.fitStarDict['altmag'],cmd.fitStarDict['delta']]).T
+
+        # Run initial magnitude fit
+        rc = RC_fitter.RedClump(cmd, iterations=100000)
+        
+        sampler, best_fit_params = rc.run_minimizer(cmd.fitStarDict['altmag'], init_fit_params)
+        weights = RC_fitter.calcWeights(fit_data, best_fit_params['A'], best_fit_params['B'], best_fit_params['MRC'], best_fit_params['SIGMA'], best_fit_params['NRC'])
+        
+        # Running color fit
+        color_fit_vals = RC_fitter.determineColor(fit_data,weights,init_color)
+
+        # Counter for number of times the fit is run
+        k=0
+
+        # Checking if the fit is in agreement with the initial guess
+        while abs(color_fit_vals[0] - init_color) > 0.03 and abs(init_M-best_fit_params['MRC']) > 0.05 and k < 5:
+            # Try and get a initial guess for Equivalece Width of RC, if not use 1.0 as default
+            try:
+                init_EWRC = best_fit_params['NRC']/best_fit_params['A']
+            except:
+                init_EWRC = 1.0
+        
+            init_B = best_fit_params['B']
+            init_M = best_fit_params['MRC']
+            init_sigma = best_fit_params['SIGMA']
+            init_color = color_fit_vals[0]
+            init_fit_params = [init_EWRC, init_B, init_M, init_sigma]
+
+            # Change the RC limits
+            cm_dict = {'altmag': [init_M-2., init_M+1.5], 'delta': [-1,5]}
+            cmd.color_mag_cut(cm_dict, percentile_cut=True)
+
+            # Get the data for the fit
+            fit_data = np.array([cmd.fitStarDict['altmag'],cmd.fitStarDict['delta']]).T
+            # Run initial magnitude fit
+            # best_fit_params = rc_mcmc.RC_MCMC(fit_data, init_EWRC, init_B, init_M, init_sigma)
+            # rc = RC_fitter.RedClump(cmd)
+            sampler, best_fit_params = rc.run_minimizer(cmd.fitStarDict['altmag'], init_fit_params)
+            weights = RC_fitter.calcWeights(fit_data, best_fit_params['A'], best_fit_params['B'], best_fit_params['MRC'], best_fit_params['SIGMA'], best_fit_params['NRC'])
+            
+            # Running color fit
+            color_fit_vals = RC_fitter.determineColor(fit_data,weights,init_color)
+
+            k+=1
+
+        init_fit_params = np.array([best_fit_params['EWRC'], best_fit_params['B'], best_fit_params['MRC'], best_fit_params['SIGMA']])
+
+        # Running mcmc to get the uncertainties
+        sampler, best_fit_params, _ = rc.run_MCMC(cmd.fitStarDict['altmag'], init_fit_params)
+
+        # Getting the best params and errors
+        best_params = []
+        for key in best_fit_params.keys():
+            best_params.append(best_fit_params[key])
+
+        # Getting the best color
+        best_params.append(color_fit_vals[0])
+        best_params.append(color_fit_vals[1])
+
+        for param in best_params:
+            self.pixels[i].append(param)
+
+
+        # Print out the progress
+        print("Pixel ", i," of ",len(self.pixels)," complete.")
+        print("Color fit iterations: ", k)
+        print(f"Nelder-Mead Params:\t[EWRC: {init_fit_params[0]:.4f}, K_RC: {init_fit_params[2]:.4f}, SIGMA: {init_fit_params[3]:.4f}]")
+        print(f"MCMC Params:\t\t[EWRC: {best_fit_params['EWRC']:.4f}, K_RC: {best_fit_params['MRC']:.4f}, SIGMA: {best_fit_params['SIGMA']:.4f}]\n")
+
+        return best_params
+
     def fit_map(self):
 
         # Getting the guesses from the initial fit file
         # Array needs to be reversed since it was generated in reverse order (sorry)
         predictions = self.get_guesses('../data/predictions.csv')
+        
 
         # Loop over the pixel centers
         for i, pixel in enumerate(self.pixels):
@@ -569,6 +681,19 @@ class mapper:
 
         return
 
+    def fit_parallel(self, n_cores = 4):
+        from multiprocessing import Pool
+        print("Starting parallelization with ", n_cores, " cores.")
+        from itertools import repeat
+
+        self.predictions = self.get_guesses('../data/predictions.csv')
+
+        # ipdb.set_trace()
+        with Pool(n_cores) as pool:
+            pool.starmap(self.fit_pixel, zip(repeat(self), self.pixels, range(len(self.pixels))))
+
+        return
+
     def run_mcmc(self, map_file = None):
         return
 
@@ -602,8 +727,12 @@ if __name__ == "__main__":
     print("Filtering Grid")
     ext_map.filter_grid()
     print("Beginning Fit\n")
-    ext_map.fit_map()
+    # ext_map.fit_map()
+    from multiprocessing import cpu_count
+    num_cores = cpu_count()
+    ext_map.fit_parallel(num_cores)
     filename = 'maps/mcmc_small'
+    ipdb.set_trace()
     ext_map.saveMap(filename = filename)
 
 
