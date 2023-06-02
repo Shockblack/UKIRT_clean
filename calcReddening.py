@@ -538,8 +538,9 @@ class mapper:
         best_params.append(color_fit_vals[1])
 
         for param in best_params:
-            self.pixels[i].append(param)
+            pixel_info.append(param)
 
+        pixel_info.append(i)
 
         # Print out the progress
         print("Pixel ", i," of ",len(self.pixels)," complete.")
@@ -547,7 +548,7 @@ class mapper:
         print(f"Nelder-Mead Params:\t[EWRC: {init_fit_params[0]:.4f}, K_RC: {init_fit_params[2]:.4f}, SIGMA: {init_fit_params[3]:.4f}]")
         print(f"MCMC Params:\t\t[EWRC: {best_fit_params['EWRC']:.4f}, K_RC: {best_fit_params['MRC']:.4f}, SIGMA: {best_fit_params['SIGMA']:.4f}]\n")
 
-        return best_params
+        return pixel_info
 
     def fit_map(self):
 
@@ -686,11 +687,12 @@ class mapper:
         print("Starting parallelization with ", n_cores, " cores.")
         from itertools import repeat
 
-        self.predictions = self.get_guesses('../data/predictions.csv')
-
-        # ipdb.set_trace()
+        self.predictions = self.get_guesses('/users/PAS1958/shockblack/research/data/data/predictions.csv')
+        
         with Pool(n_cores) as pool:
-            pool.starmap(self.fit_pixel, zip(repeat(self), self.pixels, range(len(self.pixels))))
+            for result in pool.starmap(self.fit_pixel, zip(repeat(self), self.pixels, range(len(self.pixels)))):
+                self.pixels[result[-1]] = result[:-1]
+            # pool.starmap(self.fit_pixel, zip(repeat(self), self.pixels, range(len(self.pixels))))
 
         return
 
@@ -719,7 +721,7 @@ class mapper:
 if __name__ == "__main__":
     import pandas as pd
 
-    ext_map = mapper(ra_lims=[266,267], dec_lims=[-30,-28])
+    ext_map = mapper(ra_lims=[266,267], dec_lims=[-30,-29])
     print("Getting Field Stats")
     ext_map.get_fields_stats()
     print("Generating Grid")
@@ -730,9 +732,8 @@ if __name__ == "__main__":
     # ext_map.fit_map()
     from multiprocessing import cpu_count
     num_cores = cpu_count()
-    ext_map.fit_parallel(num_cores)
+    ext_map.fit_parallel(16)
     filename = 'maps/mcmc_small'
-    ipdb.set_trace()
     ext_map.saveMap(filename = filename)
 
 
