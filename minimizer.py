@@ -20,6 +20,9 @@ from astropy import units as u
 from scipy import integrate, LowLevelCallable, optimize
 from scipy.special import erf
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
+plt.style.use('az-paper-twocol')
+
 import numpy as np
 import ipdb
 import lmfit
@@ -34,12 +37,14 @@ import ctypes
 import parameters as pram
 import createCMD
 
+B = 0.43
 sqrt2pi = np.sqrt(2*np.pi)
 
 class RedClump():
     def __init__(self, cmd, nwalkers=50, iterations=1000, burnin=100):
         self.cmd = cmd
-        self.binnumber = int(.05*len(cmd.fitStarDict['altmag']))
+        # self.binnumber = int(.05*len(cmd.fitStarDict['altmag']))
+        self.binnumber = 40
         self.nwalkers = nwalkers
         self.iterations = iterations
         self.burnin = burnin
@@ -96,8 +101,8 @@ class RedClump():
         array
             Array of the model for the MCMC fitting.
         """
-        EWRC, B, M_RC, sigma_RC = theta#['EWRC'].value, theta['B'].value, theta['MRC'].value, theta['SIGMA'].value
-
+        EWRC, M_RC, sigma_RC = theta#['EWRC'].value, theta['B'].value, theta['MRC'].value, theta['SIGMA'].value
+        
         A = self.A
 
         N_RC = EWRC*A
@@ -122,16 +127,20 @@ class RedClump():
             Array of the model for the MCMC fitting.
         """
         try:
-            EWRC, B, M_RC, sigma_RC = theta['EWRC'].value, theta['B'].value, theta['MRC'].value, theta['SIGMA'].value
+            EWRC, M_RC, sigma_RC = theta['EWRC'].value, theta['MRC'].value, theta['SIGMA'].value
         except:
-            EWRC, B, M_RC, sigma_RC = theta['EWRC'], theta['B'], theta['MRC'], theta['SIGMA']
-
-        if method == 'nm':
-            A = self.A_nm
-        elif method == 'mc':
-            A = self.A_mc
-        else:
-            A = self.A
+            pass
+        try:
+            EWRC, M_RC, sigma_RC = theta['EWRC'], theta['MRC'], theta['SIGMA']
+        except:
+            pass
+        try:
+            EWRC, M_RC, sigma_RC = theta[0], theta[1], theta[2]
+        except:
+            pass
+        # Integrate
+        I = self.integrator(EWRC, B, M_RC, sigma_RC)
+        A = self.N_obs/I
 
         N_RC = EWRC*A
 
@@ -171,8 +180,8 @@ class RedClump():
         float
             The log of the prior.
         """
-        EWRC, B, M_RC, sigma_RC = theta
-        if (0. < EWRC < 10. and 0.42999 <= B < .43001 and 12. < M_RC < 17. and 0. < sigma_RC < 1.):
+        EWRC, M_RC, sigma_RC = theta
+        if (0. < EWRC < 10. and 12. < M_RC < 17. and 0. < sigma_RC < 1.):
             return 0.0
         return -np.inf
 
@@ -204,19 +213,7 @@ class RedClump():
     def log_likelihood_nataf(self, theta, M):
         # import ipdb; ipdb.set_trace()
 
-        EWRC, B, M_RC, sigma_RC = theta#['EWRC'].value, theta['B'].value, theta['MRC'].value, theta['SIGMA'].value
-
-        # Preparing the scipy integrator in C
-        py_vals = [EWRC, B, M_RC, sigma_RC]
-
-        # ipdb.set_trace()
-        # c_vals = (ctypes.c_double * len(py_vals))(*py_vals)
-        # user_data = ctypes.cast(ctypes.pointer(c_vals), ctypes.c_void_p)
-        # func = LowLevelCallable(self.lib.f, user_data)
-
-        # I = integrate.quad(func, self.cmd.cm_dict['altmag'][0], self.cmd.cm_dict['altmag'][1])
-        # if I[0]==0:
-        #     ipdb.set_trace()
+        EWRC, M_RC, sigma_RC = theta
 
         self.I = self.integrator(EWRC, B, M_RC, sigma_RC)
         self.A = self.N_obs/self.I
@@ -226,13 +223,9 @@ class RedClump():
 
     def log_likelihood_nataf_neg(self, theta, M):
         # import ipdb; ipdb.set_trace()
+        
+        EWRC, M_RC, sigma_RC = theta['EWRC'].value, theta['MRC'].value, theta['SIGMA'].value
 
-        EWRC, B, M_RC, sigma_RC = theta['EWRC'].value, theta['B'].value, theta['MRC'].value, theta['SIGMA'].value
-
-        # Preparing the scipy integrator in C
-        py_vals = [EWRC, B, M_RC, sigma_RC]
-
-        self.value_tracker.append(py_vals)
         # ipdb.set_trace()
         # c_vals = (ctypes.c_double * len(py_vals))(*py_vals)
         # user_data = ctypes.cast(ctypes.pointer(c_vals), ctypes.c_void_p)
@@ -290,7 +283,11 @@ class RedClump():
             Array of the error estimation in the number of stars in each magnitude bin.
             *THIS IS NOT FINAL ERRORS, JUST ESTIMATES FOR THE MCMC FITTING*
         """
-        bins = np.linspace(self.cmd.cm_dict['altmag'][0], self.cmd.cm_dict['altmag'][1],self.binnumber)
+        # bins = np.linspace(self.cmd.cm_dict['altmag'][0], self.cmd.cm_dict['altmag'][1],self.binnumber)
+        # Calculate number of bins from data
+        num_bins = int(np.sqrt(len(M)))
+        bins = np.linspace(min(M), max(M), num_bins)
+
         Nstars, hist_bins = np.histogram(M,bins)#'fd')
 
         mags = (hist_bins[1:]+hist_bins[:-1])/2
@@ -319,7 +316,7 @@ class RedClump():
         """
         # Check if we are given an initial guess from Nelder-Mead
         if type(initial_guess) == type(None):
-            initial_guess = np.array([2.,0.43,14,0.5])
+            initial_guess = np.array([2.,14,0.5])
         # if initial_guess[3] > 0.49:
         #     initial_guess[3] = 0.45
         
@@ -356,7 +353,7 @@ class RedClump():
             
             # Check convergence
             converged = np.all(tau * 100 < sampler.iteration)
-            converged &= np.all(np.abs(old_tau - tau) / tau < 0.05)
+            converged &= np.all(np.abs(old_tau - tau) / tau < 0.01)
             if converged:
                 break
             old_tau = tau
@@ -384,7 +381,7 @@ class RedClump():
         # func = LowLevelCallable(self.lib.f, user_data)
 
         # I = integrate.quad(func, self.cmd.cm_dict['altmag'][0], self.cmd.cm_dict['altmag'][1])
-        self.I = self.integrator(best_params[0], best_params[1], best_params[2], best_params[3])
+        self.I = self.integrator(best_params[0], B, best_params[1], best_params[2])
         A = self.N_obs/self.I#I[0]
         self.A = A
         self.A_mc = A
@@ -395,11 +392,11 @@ class RedClump():
         A_err = 0.
         N_RC_err = 0.
 
-        params =    {'A':A, 'A_err':A_err, 'B':best_params[1], 'B_err':unc[1], 'MRC':best_params[2], 'MRC_err':unc[2], \
-                    'SIGMA':best_params[3], 'SIGMA_err':unc[3], 'NRC':N_RC, 'NRC_err':N_RC_err, 'EWRC':best_params[0], 'EWRC_err':unc[0]}
+        params =    {'A':A, 'A_err':A_err, 'B':B, 'MRC':best_params[1], 'MRC_err':unc[1], \
+                    'SIGMA':best_params[2], 'SIGMA_err':unc[2], 'NRC':N_RC, 'NRC_err':N_RC_err, 'EWRC':best_params[0], 'EWRC_err':unc[0]}
 
-        self.mcmc_params = {'EWRC':best_params[0], 'B':best_params[1], 'MRC':best_params[2], 'SIGMA':best_params[3]}
-
+        self.mcmc_params = {'EWRC':best_params[0], 'B':B, 'MRC':best_params[1], 'SIGMA':best_params[2]}
+        self.samples = sampler.flatchain
         return sampler, params, unc
 
 
@@ -426,24 +423,20 @@ class RedClump():
         self.value_tracker = []
 
         if type(initial_guess) == type(None):
-            initial_guess = np.array([2.,0.43,14,0.5])
+            initial_guess = np.array([2.,14,0.5])
 
-        # if initial_guess[3] > 0.49:
-        #     initial_guess[3] = 0.49
 
         params = lmfit.Parameters()
         params.add('EWRC', value=initial_guess[0], min=0.01, max=10.0)
-        # params.add('B', value=initial_guess[1], min=0., max=8.0)
-        params.add('B', value=0.43, vary=False)
-        params.add('MRC', value=initial_guess[2], min=12., max=17.)
-        params.add('SIGMA', value=initial_guess[3], min=0.01, max=1.)
+        params.add('MRC', value=initial_guess[1], min=12., max=17.)
+        params.add('SIGMA', value=initial_guess[2], min=0.01, max=1.)
         
         mini = lmfit.Minimizer(self.log_likelihood_nataf_neg, params, fcn_args=(M, ))
         results = mini.minimize(method='nelder')
         self.results = results
         del mini
 
-        best_params = [results.params['EWRC'].value, results.params['B'].value, results.params['MRC'].value, results.params['SIGMA'].value]
+        best_params = [results.params['EWRC'].value, results.params['MRC'].value, results.params['SIGMA'].value]
         
         # Calculating the best integral
         # Preparing the scipy integrator in C
@@ -454,42 +447,99 @@ class RedClump():
         # I = integrate.quad(func, self.cmd.cm_dict['altmag'][0], self.cmd.cm_dict['altmag'][1])
 
         # A = self.N_obs/I[0]
-        I = self.integrator(best_params[0], best_params[1], best_params[2], best_params[3])
+        I = self.integrator(best_params[0], B, best_params[1], best_params[2])
         self.A = self.N_obs/I
         N_RC = self.A*best_params[0]
         
         self.I_nm = I
-        self.A_nm = self.A
+        self.A_nm = self.N_obs/I
         self.N_RC_nm = N_RC
 
-        best_fit_params =    {'A':self.A, 'B':best_params[1], 'MRC':best_params[2], 'SIGMA':best_params[3], 'NRC':N_RC, 'EWRC':best_params[0]}
+        best_fit_params =    {'A':self.A, 'B':B, 'MRC':best_params[1], 'SIGMA':best_params[2], 'NRC':N_RC, 'EWRC':best_params[0]}
 
         self.best_fit_params = best_fit_params
 
         return results, best_fit_params
 
-    def plot(self):
+    def plot(self, ax=None, fig=None, show=False):
+        # Make the figure
+        if type(ax) == type(None):
+            fig, ax = plt.subplots(1,1)
         M_dumb, N = self.prepare_data_hist(self.cmd.fitStarDict['altmag'])
         
-        xval = np.linspace(self.cmd.cm_dict['altmag'][0], self.cmd.cm_dict['altmag'][1], 1000)
-        # xval = np.linspace(12, 17, 1000)
-        # ipdb.set_trace()
-        x_range = abs(self.cmd.cm_dict['altmag'][1] - self.cmd.cm_dict['altmag'][0])
-        # x_range = abs(17 - 12)
+        star_max, star_min = max(self.cmd.fitStarDict['altmag']), min(self.cmd.fitStarDict['altmag'])
 
-        plt.bar(M_dumb, N, color='dimgray', width=0.7*x_range/len(M_dumb))
+        xval = np.linspace(star_min, star_max, 1000)
+
+        x_range = abs(star_max - star_min)
+
+        ax.bar(M_dumb, N, color='dimgray', width=0.7*x_range/len(M_dumb))
 
         initial_model = self.model_lmfit(self.results.params, xval, method='nm')
         best_model = self.model_lmfit(self.mcmc_params, xval, method='mc')
 
-        plt.plot(xval, best_model*x_range/len(M_dumb), color="k", lw=2, alpha=0.8, label='MCMC Fit')
-        plt.plot(xval, initial_model*x_range/len(M_dumb), color="r", lw=2, alpha=0.8, label='Nelder-Mead Guess', ls='--')
-        plt.xlim(self.cmd.cm_dict['altmag'][0], self.cmd.cm_dict['altmag'][1])
-        # plt.xlim(12, 17)
-        plt.xlabel('Magnitude')
-        plt.ylabel(r'Number of Stars')
-        plt.legend()
-        plt.show()
+        # Add text in the top right corner indicating the location of the field
+        ax.text(0.99*star_max, max(N), f'(l,b)={self.cmd.l, self.cmd.b}', fontsize=12, va='top', ha='right', color='k', weight='bold')
+
+
+        model_list = []
+
+        # Loop over samples and calculate models
+        for theta in self.samples:
+            model_list.append(self.model_lmfit(theta, xval))
+
+        # Get the quantiles for the model
+        quantiles = np.percentile(model_list, [2.5, 16, 50, 84, 97.5], axis=0)
+        
+        # Plot the quantiles using fill_between
+        ax.fill_between(xval, quantiles[0]*x_range/len(M_dumb), quantiles[4]*x_range/len(M_dumb), color='r', alpha=0.2)
+        ax.fill_between(xval, quantiles[1]*x_range/len(M_dumb), quantiles[3]*x_range/len(M_dumb), color='r', alpha=0.5)
+
+        # ax.plot(xval, quantiles[2]*x_range/len(M_dumb), color="r", lw=2, alpha=0.8, label='MCMC')
+        ax.plot(xval, best_model*x_range/len(M_dumb), color="r", lw=2, alpha=0.8, label='MCMC')
+        ax.plot(xval, initial_model*x_range/len(M_dumb), color="k", lw=2, alpha=0.8, label='Nelder-Mead', ls='--')
+        ax.set_xlim(star_min, star_max)
+        
+        ax.set_xlabel(r'$K$-Band Magnitude')
+        ax.set_ylabel(r'Number of Stars')
+        ax.legend(fontsize=12, loc='upper left')
+
+        if show:
+            plt.show()
+
+    def plotall(self, ax=None, fig=None, show=False):
+
+        # Make the figure
+        if type(ax) == type(None):
+            fig, ax = plt.subplots(1,1)
+        M_dumb, N = self.prepare_data_hist(self.cmd.filterStarDict['altmag'])
+        star_max, star_min = max(self.cmd.filterStarDict['altmag']), min(self.cmd.filterStarDict['altmag'])
+
+        xval = np.linspace(star_min, star_max, 1000)
+
+        x_range = abs(star_max - star_min)
+
+        ax.bar(M_dumb, N, color='dimgray', width=0.7*x_range/len(M_dumb))
+
+        initial_model = self.model_lmfit(self.results.params, xval, method='nm')
+        best_model = self.model_lmfit(self.mcmc_params, xval, method='mc')
+
+        # Add text in the top right corner indicating the location of the field
+        ax.text(0.99*star_max, max(N), f'(l,b)={round(self.cmd.l, 3), round(self.cmd.b, 3)}', fontsize=12, va='top', ha='right', color='k', weight='bold')
+
+        for theta in self.samples[np.random.randint(len(self.samples), size=100)]:
+            ax.plot(xval, self.model_lmfit(theta, xval)*x_range/len(M_dumb), color="r", lw=1, alpha=0.1)
+
+        ax.plot(xval, best_model*x_range/len(M_dumb), color="r", lw=2, alpha=0.8, label='MCMC')
+        ax.plot(xval, initial_model*x_range/len(M_dumb), color="k", lw=2, alpha=0.8, label='Nelder-Mead', ls='--')
+        ax.set_xlim(star_min, star_max)
+        
+        ax.set_xlabel(r'$K$-Band Magnitude')
+        ax.set_ylabel(r'Number of Stars')
+        ax.legend(fontsize=12, loc='upper left')
+
+        if show:
+            plt.show()
 
 
 #-----------------------------------------------------------------------
@@ -787,39 +837,52 @@ def determineColor(data,weights,ColorRCinput):
 if __name__ == "__main__":
     
     tstart = time.time()
-    # cmd = createCMD.cmd(l=-2,b=1.5, edge_length=pram.arcmin/60.)
+    l = -0.5
+    b = 0.5
+    cmd = createCMD.cmd(l=l,b=b, edge_length=pram.arcmin/60.)
     # cmd = createCMD.cmd(263.585168,-29.938195, edge_length=pram.arcmin/60.)
-    cmd = createCMD.cmd(265.685168,-27.238195, edge_length=pram.arcmin/60.)
-    rc_fitter = RedClump(cmd, binnumber=int(.05*len(cmd.fitStarDict['altmag'])), iterations=50000)
+    # cmd = createCMD.cmd(265.685168,-27.238195, edge_length=pram.arcmin/60.)
+    rc_fitter = RedClump(cmd, iterations=50000)
     M_dumb, N = rc_fitter.prepare_data_hist(rc_fitter.cmd.fitStarDict['altmag'])
     M = rc_fitter.cmd.fitStarDict['altmag']
 
     res, params = rc_fitter.run_minimizer(M)
 
     # ipdb.set_trace()
-    # sampler, params, unc = rc_fitter.run_MCMC(M)
+    sampler, params, unc = rc_fitter.run_MCMC(M)
     tstop = time.time()
     print('Time taken: ', tstop-tstart)
+    fig = plt.figure(figsize=(7,7))
+    plt.tight_layout()
+    labels = [r'$EW_{RC}$', r'$K_{RC}$', r'$\sigma_{RC}$']
+    emcee_plot = corner.corner(rc_fitter.samples, show_titles=True, labels=labels, plot_datapoints=True, quantiles=[0.16, 0.5, 0.84], truths=list(res.params.valuesdict().values()), fig=fig)
+    # Make the corner plot look nicer but making the labels bigger
+    for ax in emcee_plot.get_axes():
+        ax.title.set_fontsize(16)
+        ax.set_xlabel(ax.get_xlabel(), fontsize=20)
+        ax.set_ylabel(ax.get_ylabel(), fontsize=20)
+        for label in ax.get_xticklabels() + ax.get_yticklabels():
+            label.set_fontsize(12)
+
+
+    # plt.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0, hspace = 0, wspace = 0)
+    # plt.margins(0,0)
+    # This is so dirty, but it saves the image temporarily, then loads it as an array to plot in imshow
+    import io
+    from PIL import Image
     
-    xval = np.linspace(12, 16, 1000)
-
-    plt.bar(M_dumb,N, color='dimgray', width=0.7*4/len(M_dumb))
-    # for theta in samples[np.random.randint(len(samples), size=100)]:
-        # plt.plot(M, rc_fitter.model_MCMC_nataf(theta, M), color="r", alpha=0.1)
-    best_model = rc_fitter.model_MCMC_nataf(res.params, xval)
-    plt.plot(xval, best_model*4/len(M_dumb), color="k", lw=2, alpha=0.8)
-    plt.xlabel('Magnitude')
-    plt.ylabel(r'Number of Stars')
-    plt.show()
-
-    # ipdb.set_trace()
-
-    
-
-    # labels = ['EWRC','B',r'$M_{RC}$',r'$\sigma_{RC}$',r'$N_{RC}$']
+    img_buf = io.BytesIO()
+    emcee_plot.savefig(img_buf, format='png', bbox_inches='tight')
+    corner_im = np.asarray(Image.open(img_buf))
+    img_buf.close()
     plt.clf()
-    fig = plt.figure(figsize=(7, 7))
-    # fig = corner.corner(samples,show_titles=True,labels=labels,plot_datapoints=True,quantiles=[0.16, 0.5, 0.84], fig=fig)
-    # plt.show()
-    emcee_plot = corner.corner(res.flatchain, show_titles=True, labels=res.var_names, plot_datapoints=True, quantiles=[0.16, 0.5, 0.84], fig=fig)#, truths=list(res.params.valuesdict().values()))
+    fig = plt.figure(figsize=(12, 4), constrained_layout=True)
+    gs = fig.add_gridspec(1, 3)
+    ax1 = fig.add_subplot(gs[0, :2])
+    rc_fitter.plot(ax = ax1)
+    
+    ax2 = fig.add_subplot(gs[0, 2])
+    ax2.imshow(corner_im)
+    ax2.axis('off')
     plt.show()
+    # plt.savefig('paperfigs/fit_with_corner_l'+str(l)+'_b'+str(b)+'.pdf')
