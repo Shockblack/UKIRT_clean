@@ -541,6 +541,40 @@ class RedClump():
         if show:
             plt.show()
 
+    def plot_full(self, show=False):
+        # Need to use new matplotlib feature, subfigures
+        fig = plt.figure(figsize=(12,4))
+        subfigs = fig.subfigures(1, 2, wspace=0, width_ratios=[2, 1])
+
+        # Add the model fit
+        ax1 = subfigs[0].subplots(1,1)
+
+        subfigs[0].subplots_adjust(wspace=0.)
+        subfigs[1].subplots_adjust(wspace=0.)
+
+        self.plot(ax=ax1, fig=subfigs[0], show=False)
+
+        # Add the corner plot
+        labels = [r'$EW_{RC}$', r'$K_{RC}$', r'$\sigma_{RC}$']
+        emcee_plot = corner.corner(rc_fitter.samples, show_titles=True, labels=labels, plot_datapoints=True, quantiles=[0.16, 0.5, 0.84], truths=list(res.params.valuesdict().values()), fig=subfigs[1])
+
+
+        from matplotlib.ticker import FormatStrFormatter
+        for i, ax in enumerate(emcee_plot.get_axes()):
+            ax.title.set_fontsize(10)
+            ax.set_xlabel(ax.get_xlabel(), fontsize=10)
+            ax.set_ylabel(ax.get_ylabel(), fontsize=10)
+            for label in ax.get_xticklabels() + ax.get_yticklabels():
+                label.set_fontsize(10)
+            ax.tick_params(pad=1.5)
+            ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
+            ax.xaxis.set_major_formatter(FormatStrFormatter('%.1f'))
+
+            if i < 6:
+                ax.xaxis.set_ticklabels([])
+                
+        if show:
+            plt.show()
 
 #-----------------------------------------------------------------------
 # Components to the luminosity function for the number of stars at
@@ -852,37 +886,8 @@ if __name__ == "__main__":
     sampler, params, unc = rc_fitter.run_MCMC(M)
     tstop = time.time()
     print('Time taken: ', tstop-tstart)
-    fig = plt.figure(figsize=(7,7))
-    plt.tight_layout()
-    labels = [r'$EW_{RC}$', r'$K_{RC}$', r'$\sigma_{RC}$']
-    emcee_plot = corner.corner(rc_fitter.samples, show_titles=True, labels=labels, plot_datapoints=True, quantiles=[0.16, 0.5, 0.84], truths=list(res.params.valuesdict().values()), fig=fig)
-    # Make the corner plot look nicer but making the labels bigger
-    for ax in emcee_plot.get_axes():
-        ax.title.set_fontsize(16)
-        ax.set_xlabel(ax.get_xlabel(), fontsize=20)
-        ax.set_ylabel(ax.get_ylabel(), fontsize=20)
-        for label in ax.get_xticklabels() + ax.get_yticklabels():
-            label.set_fontsize(12)
 
 
-    # plt.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0, hspace = 0, wspace = 0)
-    # plt.margins(0,0)
-    # This is so dirty, but it saves the image temporarily, then loads it as an array to plot in imshow
-    import io
-    from PIL import Image
-    
-    img_buf = io.BytesIO()
-    emcee_plot.savefig(img_buf, format='png', bbox_inches='tight')
-    corner_im = np.asarray(Image.open(img_buf))
-    img_buf.close()
-    plt.clf()
-    fig = plt.figure(figsize=(12, 4), constrained_layout=True)
-    gs = fig.add_gridspec(1, 3)
-    ax1 = fig.add_subplot(gs[0, :2])
-    rc_fitter.plot(ax = ax1)
-    
-    ax2 = fig.add_subplot(gs[0, 2])
-    ax2.imshow(corner_im)
-    ax2.axis('off')
-    plt.show()
+    rc_fitter.plot_full(show=True)
+
     # plt.savefig('paperfigs/fit_with_corner_l'+str(l)+'_b'+str(b)+'.pdf')
