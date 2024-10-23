@@ -23,6 +23,8 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 plt.style.use('az-paper-twocol')
 
+from multiprocessing import Pool
+
 import numpy as np
 import ipdb
 import lmfit
@@ -37,17 +39,18 @@ import ctypes
 import parameters as pram
 import createCMD
 
-B = 0.43
+# B = 0.43
 sqrt2pi = np.sqrt(2*np.pi)
 
 class RedClump():
-    def __init__(self, cmd, nwalkers=50, iterations=1000, burnin=100):
+    def __init__(self, cmd, nwalkers=50, iterations=1000, burnin=100, pool=None):
         self.cmd = cmd
         # self.binnumber = int(.05*len(cmd.fitStarDict['altmag']))
         self.binnumber = 40
         self.nwalkers = nwalkers
         self.iterations = iterations
         self.burnin = burnin
+        self.pool = pool
 
         self.N_obs = len(cmd.fitStarDict['altmag'])
 
@@ -101,7 +104,7 @@ class RedClump():
         array
             Array of the model for the MCMC fitting.
         """
-        EWRC, M_RC, sigma_RC = theta#['EWRC'].value, theta['B'].value, theta['MRC'].value, theta['SIGMA'].value
+        EWRC, M_RC, sigma_RC, B = theta#['EWRC'].value, theta['B'].value, theta['MRC'].value, theta['SIGMA'].value
         
         A = self.A
 
@@ -127,15 +130,15 @@ class RedClump():
             Array of the model for the MCMC fitting.
         """
         try:
-            EWRC, M_RC, sigma_RC = theta['EWRC'].value, theta['MRC'].value, theta['SIGMA'].value
+            EWRC, M_RC, sigma_RC, B = theta['EWRC'].value, theta['MRC'].value, theta['SIGMA'].value, theta['B'].value
         except:
             pass
         try:
-            EWRC, M_RC, sigma_RC = theta['EWRC'], theta['MRC'], theta['SIGMA']
+            EWRC, M_RC, sigma_RC , B= theta['EWRC'], theta['MRC'], theta['SIGMA'], theta['B']
         except:
             pass
         try:
-            EWRC, M_RC, sigma_RC = theta[0], theta[1], theta[2]
+            EWRC, M_RC, sigma_RC, B = theta[0], theta[1], theta[2], theta[3]
         except:
             pass
         # Integrate
@@ -180,8 +183,8 @@ class RedClump():
         float
             The log of the prior.
         """
-        EWRC, M_RC, sigma_RC = theta
-        if (0. < EWRC < 10. and 12. < M_RC < 17. and 0. < sigma_RC < 1.):
+        EWRC, M_RC, sigma_RC, B = theta
+        if (0. < EWRC < 10. and 12. < M_RC < 18. and 0. < sigma_RC < 1. and 0. < B < 1.):
             return 0.0
         return -np.inf
 
@@ -213,7 +216,7 @@ class RedClump():
     def log_likelihood_nataf(self, theta, M):
         # import ipdb; ipdb.set_trace()
 
-        EWRC, M_RC, sigma_RC = theta
+        EWRC, M_RC, sigma_RC, B = theta
 
         self.I = self.integrator(EWRC, B, M_RC, sigma_RC)
         self.A = self.N_obs/self.I
@@ -224,7 +227,7 @@ class RedClump():
     def log_likelihood_nataf_neg(self, theta, M):
         # import ipdb; ipdb.set_trace()
         
-        EWRC, M_RC, sigma_RC = theta['EWRC'].value, theta['MRC'].value, theta['SIGMA'].value
+        EWRC, M_RC, sigma_RC, B = theta['EWRC'].value, theta['MRC'].value, theta['SIGMA'].value, theta['B'].value
 
         # ipdb.set_trace()
         # c_vals = (ctypes.c_double * len(py_vals))(*py_vals)
@@ -285,7 +288,7 @@ class RedClump():
         """
         # bins = np.linspace(self.cmd.cm_dict['altmag'][0], self.cmd.cm_dict['altmag'][1],self.binnumber)
         # Calculate number of bins from data
-        num_bins = int(np.sqrt(len(M)))
+        num_bins = int(np.sqrt(len(M)))+1
         bins = np.linspace(min(M), max(M), num_bins)
 
         Nstars, hist_bins = np.histogram(M,bins)#'fd')
@@ -316,7 +319,7 @@ class RedClump():
         """
         # Check if we are given an initial guess from Nelder-Mead
         if type(initial_guess) == type(None):
-            initial_guess = np.array([2.,14,0.5])
+            initial_guess = np.array([2.,14,0.5,0.43])
         # if initial_guess[3] > 0.49:
         #     initial_guess[3] = 0.45
         
@@ -324,42 +327,43 @@ class RedClump():
         # p0 = [np.array(initial_guess) + 0.05*np.array(initial_guess)*np.random.randn(len(initial_guess)) for i in range(self.nwalkers)]
         p0 = [np.array(initial_guess) + 10**(-5)*np.array(initial_guess)*np.random.randn(len(initial_guess)) for i in range(self.nwalkers)]
 
+        with Pool(4) as pool:
 
-        sampler = emcee.EnsembleSampler(self.nwalkers, len(initial_guess), self.log_probability, args=(M, ))
+            sampler = emcee.EnsembleSampler(self.nwalkers, len(initial_guess), self.log_probability, args=(M, ), pool=pool)
 
-        # Run the burn-in
-        p0, _, _ = sampler.run_mcmc(p0, self.burnin)
-        sampler.reset()
+            # Run the burn-in
+            p0, _, _ = sampler.run_mcmc(p0, self.burnin, progress=False)
+            sampler.reset()
 
-        autocorr = np.empty(self.iterations)
+            autocorr = np.empty(self.iterations)
 
-        # This will be useful to testing convergence
-        old_tau = np.inf
-        i = 0
-        # Now we'll sample for up to max_n steps
-        for sample in sampler.sample(p0, iterations=self.iterations, progress=False):
-            # Only check convergence every 200 steps
-            if sampler.iteration % 200:
-                continue
-            
-            # Compute the autocorrelation time so far
-            # Using tol=0 means that we'll always get an estimate even
-            # if it isn't trustworthy
-            tau = sampler.get_autocorr_time(tol=0)
-            
-            
-            autocorr[i] = np.mean(tau)
-            i += 1
-            
-            # Check convergence
-            converged = np.all(tau * 100 < sampler.iteration)
-            converged &= np.all(np.abs(old_tau - tau) / tau < 0.01)
-            if converged:
-                break
-            old_tau = tau
-            best_ind = np.argmax(sampler.flatlnprobability)
-            samples = sampler.flatchain
-            best_params = samples[best_ind]
+            # This will be useful to testing convergence
+            old_tau = np.inf
+            i = 0
+            # Now we'll sample for up to max_n steps
+            for sample in sampler.sample(p0, iterations=self.iterations, progress=True):
+                # Only check convergence every 200 steps
+                if sampler.iteration % 200:
+                    continue
+                
+                # Compute the autocorrelation time so far
+                # Using tol=0 means that we'll always get an estimate even
+                # if it isn't trustworthy
+                tau = sampler.get_autocorr_time(tol=0)
+                
+                
+                autocorr[i] = np.mean(tau)
+                i += 1
+                
+                # Check convergence
+                converged = np.all(tau * 100 < sampler.iteration)
+                converged &= np.all(np.abs(old_tau - tau) / tau < 0.01)
+                if converged:
+                    break
+                old_tau = tau
+                best_ind = np.argmax(sampler.flatlnprobability)
+                samples = sampler.flatchain
+                best_params = samples[best_ind]
             
         # Run the production
         # pos, prob, state =  sampler.run_mcmc(p0, self.iterations, progress=True)
@@ -368,7 +372,7 @@ class RedClump():
         best_ind = np.argmax(sampler.flatlnprobability)
         samples = sampler.flatchain
         best_params = samples[best_ind]
-
+        B = best_params[3]
         # Calculate the statistical uncertainties
         perc = np.percentile(samples, [16, 50, 84], axis=0)
         unc = np.diff(perc, axis=0).T
@@ -427,9 +431,10 @@ class RedClump():
 
 
         params = lmfit.Parameters()
-        params.add('EWRC', value=initial_guess[0], min=0.01, max=10.0)
-        params.add('MRC', value=initial_guess[1], min=12., max=17.)
+        params.add('EWRC', value=initial_guess[0], min=0.01, max=20.0)
+        params.add('MRC', value=initial_guess[1], min=12., max=18.)
         params.add('SIGMA', value=initial_guess[2], min=0.01, max=1.)
+        params.add('B', value=0.43, min=0.01, max=1.0)
         
         mini = lmfit.Minimizer(self.log_likelihood_nataf_neg, params, fcn_args=(M, ))
         results = mini.minimize(method='nelder')
@@ -437,7 +442,7 @@ class RedClump():
         del mini
 
         best_params = [results.params['EWRC'].value, results.params['MRC'].value, results.params['SIGMA'].value]
-        
+        B = results.params['B'].value
         # Calculating the best integral
         # Preparing the scipy integrator in C
         # c_vals = (ctypes.c_double * len(best_params))(*best_params)
@@ -479,7 +484,7 @@ class RedClump():
         best_model = self.model_lmfit(self.mcmc_params, xval, method='mc')
 
         # Add text in the top right corner indicating the location of the field
-        ax.text(0.99*star_max, max(N), f'(l,b)={self.cmd.l, self.cmd.b}', fontsize=12, va='top', ha='right', color='k', weight='bold')
+        ax.text(0.95, 0.95, f'(l,b)={self.cmd.l, self.cmd.b}', fontsize=14, va='top', ha='right', color='k', weight='bold', transform=ax.transAxes)
 
 
         model_list = []
@@ -492,17 +497,19 @@ class RedClump():
         quantiles = np.percentile(model_list, [2.5, 16, 50, 84, 97.5], axis=0)
         
         # Plot the quantiles using fill_between
-        ax.fill_between(xval, quantiles[0]*x_range/len(M_dumb), quantiles[4]*x_range/len(M_dumb), color='r', alpha=0.2)
-        ax.fill_between(xval, quantiles[1]*x_range/len(M_dumb), quantiles[3]*x_range/len(M_dumb), color='r', alpha=0.5)
+        ax.fill_between(xval, quantiles[0]*x_range/len(M_dumb), quantiles[4]*x_range/len(M_dumb), color=pram.red, alpha=0.2)
+        ax.fill_between(xval, quantiles[1]*x_range/len(M_dumb), quantiles[3]*x_range/len(M_dumb), color=pram.red, alpha=0.5)
 
         # ax.plot(xval, quantiles[2]*x_range/len(M_dumb), color="r", lw=2, alpha=0.8, label='MCMC')
-        ax.plot(xval, best_model*x_range/len(M_dumb), color="r", lw=2, alpha=0.8, label='MCMC')
+        ax.plot(xval, best_model*x_range/len(M_dumb), color='r', lw=4, alpha=1.0, label='MCMC')
         ax.plot(xval, initial_model*x_range/len(M_dumb), color="k", lw=2, alpha=0.8, label='Nelder-Mead', ls='--')
         ax.set_xlim(star_min, star_max)
         
-        ax.set_xlabel(r'$K$-Band Magnitude')
-        ax.set_ylabel(r'Number of Stars')
-        ax.legend(fontsize=12, loc='upper left')
+        ax.set_xlabel(r'$K$-Band Magnitude', fontsize=16)
+        ax.set_ylabel(r'Number of Stars', fontsize=16)
+        ax.legend(fontsize=14, loc='upper left', handlelength=1.2)
+
+        ax.tick_params(axis='both',which='both',direction='in',top=True,right=True, labelsize=16)
 
         if show:
             plt.show()
@@ -534,9 +541,11 @@ class RedClump():
         ax.plot(xval, initial_model*x_range/len(M_dumb), color="k", lw=2, alpha=0.8, label='Nelder-Mead', ls='--')
         ax.set_xlim(star_min, star_max)
         
-        ax.set_xlabel(r'$K$-Band Magnitude')
-        ax.set_ylabel(r'Number of Stars')
-        ax.legend(fontsize=12, loc='upper left')
+        ax.set_xlabel(r'$K$-Band Magnitude', fontsize=16)
+        ax.set_ylabel(r'Number of Stars', fontsize=16)
+        ax.legend(fontsize=14, loc='upper left', handlelength=1.5)
+
+        ax.tick_params(axis='both',which='both',direction='in',top=True,right=True, labelsize=16)
 
         if show:
             plt.show()
@@ -554,8 +563,10 @@ class RedClump():
 
         self.plot(ax=ax1, fig=subfigs[0], show=False)
 
+        ax1.set_xlim(12, 16.5)
+
         # Add the corner plot
-        labels = [r'$EW_{RC}$', r'$K_{RC}$', r'$\sigma_{RC}$']
+        labels = [r'$EW_{RC}$', r'$K_{RC}$', r'$\sigma_{RC}$', r'$B$']
         emcee_plot = corner.corner(rc_fitter.samples, show_titles=True, labels=labels, plot_datapoints=True, quantiles=[0.16, 0.5, 0.84], truths=list(res.params.valuesdict().values()), fig=subfigs[1])
 
 
@@ -567,11 +578,13 @@ class RedClump():
             for label in ax.get_xticklabels() + ax.get_yticklabels():
                 label.set_fontsize(10)
             ax.tick_params(pad=1.5)
-            ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
-            ax.xaxis.set_major_formatter(FormatStrFormatter('%.1f'))
+            ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
+            ax.xaxis.set_major_formatter(FormatStrFormatter('%.2f'))
 
             if i < 6:
                 ax.xaxis.set_ticklabels([])
+            if i % 3 != 0:
+                ax.yaxis.set_ticklabels([])
                 
         if show:
             plt.show()
@@ -629,6 +642,14 @@ def RGBBgaussian(M,M_RC,sigma_RC,N_RC):
     sigma_RGBB = sigma_RC
 
     return N_RGBB/(sqrt2pi*sigma_RGBB)*np.exp(-(M-M_RGBB)**2/(2*sigma_RGBB**2))
+
+def AGBBgaussian(M,M_RC,sigma_RC,N_RC):
+
+    N_AGBB = 0.028*N_RC
+    M_AGBB = M_RC-1.07
+    sigma_AGBB = sigma_RC
+
+    return N_AGBB/(sqrt2pi*sigma_AGBB)*np.exp(-(M-M_AGBB)**2/(2*sigma_AGBB**2))
 
 def BackgroundExp(A, B, M, M_RC):
     """The background exponential term of the luminosity function.
@@ -717,7 +738,7 @@ def luminosityFunction_EWRC(M,EWRC,B,M_RC,sigma_RC):
     function
         Function for the luminosity function.
     """
-    return RCgaussian(M,M_RC,sigma_RC,EWRC)+RGBBgaussian(M,M_RC,sigma_RC,EWRC)+BackgroundExp_NoA(B,M,M_RC)
+    return RCgaussian(M,M_RC,sigma_RC,EWRC)+RGBBgaussian(M,M_RC,sigma_RC,EWRC)+BackgroundExp_NoA(B,M,M_RC)+AGBBgaussian(M,M_RC,sigma_RC,EWRC)
 
 def calcWeights(data,A,B,M_RC,sigma_RC,N_RC):
     """Calculates the weights to be used in determining the color of the RC.
@@ -871,8 +892,9 @@ def determineColor(data,weights,ColorRCinput):
 if __name__ == "__main__":
     
     tstart = time.time()
-    l = -0.5
-    b = 0.5
+    l = 0.5
+    b = -0.25
+    # b=-2.0
     cmd = createCMD.cmd(l=l,b=b, edge_length=pram.arcmin/60.)
     # cmd = createCMD.cmd(263.585168,-29.938195, edge_length=pram.arcmin/60.)
     # cmd = createCMD.cmd(265.685168,-27.238195, edge_length=pram.arcmin/60.)
@@ -890,4 +912,4 @@ if __name__ == "__main__":
 
     rc_fitter.plot_full(show=True)
 
-    # plt.savefig('paperfigs/fit_with_corner_l'+str(l)+'_b'+str(b)+'.pdf')
+    # plt.savefig('paperfigs/fit_with_corner_l'+str(l)+'_b'+str(b)+'.pdf', bbox_inches='tight')

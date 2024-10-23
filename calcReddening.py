@@ -550,7 +550,7 @@ class mapper:
 
         return pixel_info
 
-    def fit_map(self):
+    def fit_map(self, pool=None):
 
         # Getting the guesses from the initial fit file
         # Array needs to be reversed since it was generated in reverse order (sorry)
@@ -559,6 +559,9 @@ class mapper:
 
         # Loop over the pixel centers
         for i, pixel in enumerate(self.pixels):
+            # pix_check = [1000, 4618, 4272, 4351, 4431, 4350, 4430, 4349, 4189]
+            # if i not in pix_check:
+                # continue
             # Get the initial guesses
 
             # Start by finding the closest pixel to the current pixel from our initial fit
@@ -570,9 +573,12 @@ class mapper:
             initial_guess = predictions[closest_pixel]
             init_EWRC, init_B, init_M, init_sigma, init_color = initial_guess[4], initial_guess[5], initial_guess[6], initial_guess[7], initial_guess[8]
 
+            # if init_M < 13.5:
+                # init_M = 13.5
+
             i += 1
 
-            init_fit_params = [init_EWRC, init_B, init_M, init_sigma]
+            init_fit_params = [init_EWRC, init_M, init_sigma]
 
             # Get the color magnitude diagram for the pixel
             # The color-mag cuts are done initially already on this call
@@ -587,7 +593,7 @@ class mapper:
 
             # Run initial magnitude fit
             
-            rc = RC_fitter.RedClump(cmd, iterations=100000)
+            rc = RC_fitter.RedClump(cmd, iterations=100000, pool=pool)
             
             sampler, best_fit_params = rc.run_minimizer(cmd.fitStarDict['altmag'], init_fit_params)
 
@@ -606,12 +612,11 @@ class mapper:
                     init_EWRC = best_fit_params['NRC']/best_fit_params['A']
                 except:
                     init_EWRC = 1.0
-                init_B = best_fit_params['B']
                 init_M = best_fit_params['MRC']
                 init_sigma = best_fit_params['SIGMA']
                 init_color = color_fit_vals[0]
 
-                init_fit_params = [init_EWRC, init_B, init_M, init_sigma]
+                init_fit_params = [init_EWRC, init_M, init_sigma]
 
                 # Change the RC limits
                 cm_dict = {'altmag': [init_M-2., init_M+1.5], 'delta': [-1,5]}
@@ -637,7 +642,7 @@ class mapper:
             
             init_fit_params = np.array([best_fit_params['EWRC'], best_fit_params['B'], best_fit_params['MRC'], best_fit_params['SIGMA']])
             # Running mcmc to get the uncertainties
-            # print("Initial guess: ", init_fit_params)
+            print("Initial guess: ", init_fit_params)
             sampler, best_fit_params, _ = rc.run_MCMC(cmd.fitStarDict['altmag'], init_fit_params)
 
             # Set to True if you want to plot the fits
@@ -664,19 +669,20 @@ class mapper:
             for param in best_params:
                 pixel.append(param)
             
-            # If you need to debug the CMD, uncomment these two lines. 
-            # It will plot the CMD for the given pixel and fit, very useful.
-            # if i % 100 == 0:
-                # rc.plot()
-
+            
             # Print out the progress
-            print("Pixel ",i," of ",len(self.pixels)," complete.")
-            print(f"Nelder-Mead Params:\t[EWRC: {init_fit_params[0]:.4f}, K_RC: {init_fit_params[2]:.4f}, SIGMA: {init_fit_params[3]:.4f}]")
+            print("Pixel ",i-1," of ",len(self.pixels)," complete.")
+            print(f"Nelder-Mead Params:\t[EWRC: {init_fit_params[0]:.4f}, K_RC: {init_fit_params[1]:.4f}, SIGMA: {init_fit_params[2]:.4f}]")
             print(f"MCMC Params:\t\t[EWRC: {best_fit_params['EWRC']:.4f}, K_RC: {best_fit_params['MRC']:.4f}, SIGMA: {best_fit_params['SIGMA']:.4f}]\n")
             
+            # If you need to debug the CMD, uncomment these two lines. 
+            # It will plot the CMD for the given pixel and fit, very useful.
+            # rc.plotall(show=True)
 
+            # ipdb.set_trace()
             if i %1000 == 0:
                 self.saveMap(filename='maps/mcmc_map_'+str(i))
+                
 
 
 
@@ -687,7 +693,7 @@ class mapper:
         print("Starting parallelization with ", n_cores, " cores.")
         from itertools import repeat
 
-        self.predictions = self.get_guesses('/users/PAS1958/shockblack/research/data/data/predictions.csv')
+        self.predictions = self.get_guesses('../data/predictions.csv')
         
         with Pool(n_cores) as pool:
             for result in pool.starmap(self.fit_pixel, zip(repeat(self), self.pixels, range(len(self.pixels)))):
@@ -721,7 +727,9 @@ class mapper:
 if __name__ == "__main__":
     import pandas as pd
 
-    ext_map = mapper(ra_lims=[266,267], dec_lims=[-30,-29])
+    # ext_map = mapper(ra_lims=[266.33,266.45], dec_lims=[-29.05, -28.9])
+    ext_map = mapper()
+
     print("Getting Field Stats")
     ext_map.get_fields_stats()
     print("Generating Grid")
@@ -729,11 +737,11 @@ if __name__ == "__main__":
     print("Filtering Grid")
     ext_map.filter_grid()
     print("Beginning Fit\n")
-    # ext_map.fit_map()
+    ext_map.fit_map()
     from multiprocessing import cpu_count
-    num_cores = cpu_count()
-    ext_map.fit_parallel(16)
-    filename = 'maps/mcmc_small'
+    # num_cores = cpu_count()
+    # ext_map.fit_parallel(2)
+    filename = 'paperdata/mcmc_map_full'
     ext_map.saveMap(filename = filename)
 
 

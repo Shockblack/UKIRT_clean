@@ -143,7 +143,7 @@ class cmd:
 
             self.raw_field_inds = self.findFields(plot_fields=False)
             # import ipdb; ipdb.set_trace()
-            self.limit_dict = {'N':[10,1e6],'altN':[3,1e6],'offset':[-0.1,0.1]}
+            self.limit_dict = {'N':[10,1e6],'altN':[3,1e6],'offset':[-0.1,0.1], 'altMAD':[-0.1,0.1], 'MAD':[-0.1,0.1]}
             if type(cm_dict)==type(None):
                 self.cm_dict = {'altmag':[12,17],'delta':[-1,5]}
             else:
@@ -152,10 +152,6 @@ class cmd:
         
         self.getStars(limit_dict=self.limit_dict)
         self.color_mag_cut(self.cm_dict,percentile_cut=True)
-
-        if findvec == True:
-            self.coeffs = self.calcReddeningVec(rc_dict)
-            self.red_vec = self.coeffs[0]
 
 
     def readUKIRTfields(self, filename='ukirtFieldLocations.sav', dir='fieldLocations/'):
@@ -273,16 +269,16 @@ class cmd:
         for dict_list in vecfieldData:
 
             # Creates a dictionary with the framework of the first entry
-            all_dict=dict_list[0]
+            self.all_dict=dict_list[0]
 
             for i in np.arange(len(dict_list)-1)+1:
                 # Loops over all keys
-                for key in all_dict.keys():
+                for key in self.all_dict.keys():
                     # Appends the dictionary key with the value of the next datapoint of the i-th star
-                    element = np.append(all_dict[key],dict_list[i][key])
-                    all_dict[key] = element
+                    element = np.append(self.all_dict[key],dict_list[i][key])
+                    self.all_dict[key] = element
             
-            ordered_fields.append(all_dict)
+            ordered_fields.append(self.all_dict)
 
         # List which will hold field number and min/max values
         fieldRange = []
@@ -448,24 +444,24 @@ class cmd:
             # this will turn it into a dictionary of lists. This line below creates the "framework"
             # for the dictionary by pulling the first entry of the dict_list[0] so that the keys
             # are already in place.
-            all_dict = dict_list[0]
+            self.all_dict = dict_list[0]
 
             # Creates a range to loop over all the stars excluding the first one. The -1 in the arange
             # after the len() makes it 1 item shorter. The +1 after the arange adds 1 to every
             # value in the arange, essentially making it start 1 index later.
             for i in np.arange(len(dict_list)-1)+1:
                 # Loops over all keys
-                for key in all_dict.keys():
+                for key in self.all_dict.keys():
                     # Appends the dictionary key with the value of the next datapoint of the i-th star
-                    all_dict[key]=np.append(all_dict[key],dict_list[i][key])
+                    self.all_dict[key]=np.append(self.all_dict[key],dict_list[i][key])
 
         # Gathers the indices for all stars within the RA and DEC range.
-        good_ra_high = all_dict['RA']<=self.ra_max 
-        good_ra_low = all_dict['RA']>=self.ra_min
+        good_ra_high = self.all_dict['RA']<=self.ra_max 
+        good_ra_low = self.all_dict['RA']>=self.ra_min
         good_ra_inds = good_ra_low & good_ra_high
 
-        good_dec_high = all_dict['Dec']<=self.dec_max 
-        good_dec_low = all_dict['Dec']>=self.dec_min
+        good_dec_high = self.all_dict['Dec']<=self.dec_max 
+        good_dec_low = self.all_dict['Dec']>=self.dec_min
         good_dec_inds = good_dec_low & good_dec_high 
         
         good_coord_inds = good_ra_inds & good_dec_inds
@@ -478,22 +474,22 @@ class cmd:
         # Starting off with our good indices being those within coord range
         good_inds = good_coord_inds
         # Looping over all keys
-        for key in all_dict.keys():
+        for key in self.all_dict.keys():
 
             # Checks if the specified key is within our limiting filter dictionary.
             if key in limit_dict.keys():
 
                 # Gathers indices where the stars in the dictionary pass the filter.
-                low_inds = all_dict[key]>=limit_dict[key][0]
-                high_inds = all_dict[key]<=limit_dict[key][1]
+                low_inds = self.all_dict[key]>=limit_dict[key][0]
+                high_inds = self.all_dict[key]<=limit_dict[key][1]
 
                 # Gathers all elements that don't have "nan" entries
                 try:
                     # Returns False if 'nan' and True if not, basically opposite of Numpy.isnan
-                    nan_inds = not (np.isnan(all_dict[key]))
+                    nan_inds = not (np.isnan(self.all_dict[key]))
                 except:
                     # If there are no 'nan' values, return a list of all True
-                    nan_inds = np.ones(len(all_dict[key]),dtype=bool)
+                    nan_inds = np.ones(len(self.all_dict[key]),dtype=bool)
                     pass
 
                 # Uses logical 'and' to gather all indices that have passed checks
@@ -502,18 +498,18 @@ class cmd:
             # If no filter key, just checks for 'nan' same way as above
             else:
                 try:
-                    good_inds = good_inds & (not np.isnan(all_dict[key]))
+                    good_inds = good_inds & (not np.isnan(self.all_dict[key]))
                 except:
-                    nan_inds = np.ones(len(all_dict[key]),dtype=bool)
+                    nan_inds = np.ones(len(self.all_dict[key]),dtype=bool)
                     good_inds = good_inds & nan_inds
                     pass
         
         # Appends our filtered dictionary with values in 'good_inds'
-        for key in all_dict.keys():
-            filt_dict[key] = all_dict[key][good_inds]
+        for key in self.all_dict.keys():
+            filt_dict[key] = self.all_dict[key][good_inds]
 
         
-        self.allStarDict = all_dict
+        self.allStarDict = self.all_dict
         self.filterStarDict = filt_dict
 
 
@@ -710,7 +706,94 @@ class cmd:
         # Returns the coefficients
         return coeffs
 
+    def plotfields(self, save=False, filepath='figs/ukirt_fields.pdf'):
+
+        from mw_plot import MWSkyMap, MWPlot
+
+        fieldRange = np.array(cmd_test.fieldLocations())
+
+        # Plotting the field locations
+        import matplotlib.pyplot as plt
+        import matplotlib.patches as patches
+        plt.style.use('az-paper-twocol')
+
+        # Plot the fields as rectangles
+        fig, ax = plt.subplots(figsize=(6,6))
+
+        # Adding the MW background
+        mw = MWPlot(mode='edge-on', coord='galactic', annotation=False)
+        mw.transform(ax)
+
+        edge_length = fieldRange[0][2]-fieldRange[0][1]
+
+        angle = self.calc_angle(fieldRange[0][1],fieldRange[0][3],fieldRange[0][2],fieldRange[0][4])
+
+        # Get the field in l and b using astropy
+        c = coord.SkyCoord(ra=fieldRange[:,1]*u.degree, dec=fieldRange[:,3]*u.degree, frame='icrs')
+        c2 = coord.SkyCoord(ra=fieldRange[:,2]*u.degree, dec=fieldRange[:,4]*u.degree, frame='icrs')
+        l = c.galactic.l.degree
+        b = c.galactic.b.degree
+
+        # If l is greater than 180, subtract 360
+        l[l>180] = l[l>180]-360
+        edge_length -= 0.075
+        
+        plt.grid(color='gray', linestyle='-', linewidth=0.5, alpha=0.5)
+
+        fields = []
+        layout = 'fieldLocations/romanfields.txt'
+        from itertools import groupby
+        with open(layout) as fp:
+            for k, g in groupby(fp, lambda x: x.startswith(' ')):
+                if not k:
+                    fields.append(np.array([[float(x) for x in d.split()] for d in g if len(d.strip())]))
+
+        for f in fields:
+            ax.plot(f[:,1],f[:,2],'k-',lw=3)
+
+        label_list = [r'1 obs/night ($H$)', r'2 obs/night ($K$)', r'3 obs/night ($K$)', r'\textit{Roman} DRM Fields']
+        color_list = ['#F27405','#BF0404','#260101', 'k']
+
+        for i in range(len(label_list)):
+            ax.scatter(1e4,0,label=label_list[i], color=color_list[i], marker='s')
+
+        for i in range(len(l)):
+            long, lat = l[i], b[i]
+            color = 'k'
+            if i <= 15 or i >= 40:
+                color = color_list[0]
+
+            elif i <= 31 and i >= 16:
+                color = color_list[2]
+
+            elif i <= 39 and i >= 32:
+                color = color_list[1]
+
+            ax.add_patch(patches.Rectangle((long,lat),edge_length,edge_length,fill=False, angle=angle, color=color, linewidth=2, alpha=0.8))
+        
+        plt.xlim(3,-3)
+        plt.ylim(-3,3)
+
+        # Increase tick size
+        ax.tick_params(axis='both', which='major', labelsize=14)
+
+        plt.xlabel('Galactic Longitude (deg)', fontsize=16)
+        plt.ylabel('Galactic Latitude (deg)', fontsize=16)
+
+        ax.set_aspect('equal')
+        handles, labels = plt.gca().get_legend_handles_labels()
+        order = [2,1,0,3]
+        plt.legend([handles[idx] for idx in order],[labels[idx] for idx in order], fontsize=11, loc='lower right')
+
+        if save:
+            plt.savefig(filepath, bbox_inches='tight')
+        else:
+            plt.show()
+    
+
 if __name__ == '__main__':
     rc_dict={'altmag':[12, 15.5], 'delta':[0.1, 1.0], 'altMAD':[-0.1,0.1], 'MAD':[-0.1,0.1]}
-    cmd_test = cmd(findvec=True, fieldType='field', field_ind=3, rc_dict=rc_dict)
+    cmd_test = cmd(findvec=True, fieldType='subfield', field_ind=3, rc_dict=rc_dict)
     print(cmd_test.coeffs[0])
+
+    cmd_test.plotfields(save=True, filepath='paperfigs/ukirt_fields.pdf')

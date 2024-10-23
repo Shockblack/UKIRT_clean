@@ -21,3 +21,7 @@ method = 'mag'
 
 #Default pathways... Please enter the path to the project folder here so no internal changes need to be made!
 projpath = '/mnt/a/documents/files/surp/ukirt-exinction-maps'
+
+brown = '#260101'
+red = '#BF0404'
+orange = '#F27405'
