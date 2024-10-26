@@ -43,14 +43,13 @@ import createCMD
 sqrt2pi = np.sqrt(2*np.pi)
 
 class RedClump():
-    def __init__(self, cmd, nwalkers=50, iterations=1000, burnin=100, pool=None):
+    def __init__(self, cmd, nwalkers=50, iterations=1000, burnin=100):
         self.cmd = cmd
         # self.binnumber = int(.05*len(cmd.fitStarDict['altmag']))
         self.binnumber = 40
         self.nwalkers = nwalkers
         self.iterations = iterations
         self.burnin = burnin
-        self.pool = pool
 
         self.N_obs = len(cmd.fitStarDict['altmag'])
 
