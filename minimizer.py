@@ -326,43 +326,43 @@ class RedClump():
         # p0 = [np.array(initial_guess) + 0.05*np.array(initial_guess)*np.random.randn(len(initial_guess)) for i in range(self.nwalkers)]
         p0 = [np.array(initial_guess) + 10**(-5)*np.array(initial_guess)*np.random.randn(len(initial_guess)) for i in range(self.nwalkers)]
 
-        with Pool(4) as pool:
+        # with Pool(4) as pool:
 
-            sampler = emcee.EnsembleSampler(self.nwalkers, len(initial_guess), self.log_probability, args=(M, ), pool=pool)
+        sampler = emcee.EnsembleSampler(self.nwalkers, len(initial_guess), self.log_probability, args=(M, ))#, pool=pool)
 
-            # Run the burn-in
-            p0, _, _ = sampler.run_mcmc(p0, self.burnin, progress=False)
-            sampler.reset()
+        # Run the burn-in
+        p0, _, _ = sampler.run_mcmc(p0, self.burnin, progress=False)
+        sampler.reset()
 
-            autocorr = np.empty(self.iterations)
+        autocorr = np.empty(self.iterations)
 
-            # This will be useful to testing convergence
-            old_tau = np.inf
-            i = 0
-            # Now we'll sample for up to max_n steps
-            for sample in sampler.sample(p0, iterations=self.iterations, progress=True):
-                # Only check convergence every 200 steps
-                if sampler.iteration % 200:
-                    continue
-                
-                # Compute the autocorrelation time so far
-                # Using tol=0 means that we'll always get an estimate even
-                # if it isn't trustworthy
-                tau = sampler.get_autocorr_time(tol=0)
-                
-                
-                autocorr[i] = np.mean(tau)
-                i += 1
-                
-                # Check convergence
-                converged = np.all(tau * 100 < sampler.iteration)
-                converged &= np.all(np.abs(old_tau - tau) / tau < 0.01)
-                if converged:
-                    break
-                old_tau = tau
-                best_ind = np.argmax(sampler.flatlnprobability)
-                samples = sampler.flatchain
-                best_params = samples[best_ind]
+        # This will be useful to testing convergence
+        old_tau = np.inf
+        i = 0
+        # Now we'll sample for up to max_n steps
+        for sample in sampler.sample(p0, iterations=self.iterations, progress=True):
+            # Only check convergence every 200 steps
+            if sampler.iteration % 200:
+                continue
+            
+            # Compute the autocorrelation time so far
+            # Using tol=0 means that we'll always get an estimate even
+            # if it isn't trustworthy
+            tau = sampler.get_autocorr_time(tol=0)
+            
+            
+            autocorr[i] = np.mean(tau)
+            i += 1
+            
+            # Check convergence
+            converged = np.all(tau * 100 < sampler.iteration)
+            converged &= np.all(np.abs(old_tau - tau) / tau < 0.01)
+            if converged:
+                break
+            old_tau = tau
+            best_ind = np.argmax(sampler.flatlnprobability)
+            samples = sampler.flatchain
+            best_params = samples[best_ind]
             
         # Run the production
         # pos, prob, state =  sampler.run_mcmc(p0, self.iterations, progress=True)
@@ -897,14 +897,16 @@ if __name__ == "__main__":
     cmd = createCMD.cmd(l=l,b=b, edge_length=pram.arcmin/60.)
     # cmd = createCMD.cmd(263.585168,-29.938195, edge_length=pram.arcmin/60.)
     # cmd = createCMD.cmd(265.685168,-27.238195, edge_length=pram.arcmin/60.)
-    rc_fitter = RedClump(cmd, iterations=50000)
+    rc_fitter = RedClump(cmd, iterations=100000)
     M_dumb, N = rc_fitter.prepare_data_hist(rc_fitter.cmd.fitStarDict['altmag'])
     M = rc_fitter.cmd.fitStarDict['altmag']
 
     res, params = rc_fitter.run_minimizer(M)
 
+    init_params = np.array([params['EWRC'], params['MRC'], params['SIGMA'], params['B']])
+
     # ipdb.set_trace()
-    sampler, params, unc = rc_fitter.run_MCMC(M)
+    sampler, params, unc = rc_fitter.run_MCMC(M, initial_guess=init_params)
     tstop = time.time()
     print('Time taken: ', tstop-tstart)
 
