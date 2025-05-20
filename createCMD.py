@@ -32,6 +32,7 @@ from astropy import coordinates as coord
 from astropy import units as u
 import numpy as np
 import parameters as pram
+import pandas as pd
 
 class cmd:
     def __init__(self, ra=None, dec=None, l=None, b=None, year = pram.year, edge_length=0.25, findvec = False, fieldType = 'field', field_ind=0, rc_dict={}, cm_dict=None):
@@ -454,6 +455,11 @@ class cmd:
                 for key in self.all_dict.keys():
                     # Appends the dictionary key with the value of the next datapoint of the i-th star
                     self.all_dict[key]=np.append(self.all_dict[key],dict_list[i][key])
+        
+        # Apply the UKIRT PSF --> CASU Corrections
+        self.all_dict['mag'] = self.all_dict['mag'] + 0.025
+        self.all_dict['altmag'] = self.all_dict['altmag'] - 0.029
+        self.all_dict['delta'] = self.all_dict['delta'] + 0.054
 
         # Gathers the indices for all stars within the RA and DEC range.
         good_ra_high = self.all_dict['RA']<=self.ra_max 
@@ -708,21 +714,27 @@ class cmd:
 
     def plotfields(self, save=False, filepath='figs/ukirt_fields.pdf'):
 
-        from mw_plot import MWSkyMap, MWPlot
+        from mw_plot import MWSkyMap
 
         fieldRange = np.array(cmd_test.fieldLocations())
 
         # Plotting the field locations
         import matplotlib.pyplot as plt
         import matplotlib.patches as patches
+        from matplotlib.collections import PatchCollection
         plt.style.use('az-paper-twocol')
+        # use latex
+        plt.rc('text', usetex=True)
 
         # Plot the fields as rectangles
         fig, ax = plt.subplots(figsize=(6,6))
 
         # Adding the MW background
-        mw = MWPlot(mode='edge-on', coord='galactic', annotation=False)
+        # mw = MWPlot(mode='edge-on', coord='galactic', annotation=False)
+        mw = MWSkyMap(grayscale=True, radius=(10,10)*u.deg, background='Color flux map for I/355/gaiadr3 (Gaia DR3)')
         mw.transform(ax)
+        # ax.get_images()[0]._alpha = 0.6
+        # import ipdb; ipdb.set_trace()
 
         edge_length = fieldRange[0][2]-fieldRange[0][1]
 
@@ -740,16 +752,23 @@ class cmd:
         
         plt.grid(color='gray', linestyle='-', linewidth=0.5, alpha=0.5)
 
-        fields = []
-        layout = 'fieldLocations/romanfields.txt'
-        from itertools import groupby
-        with open(layout) as fp:
-            for k, g in groupby(fp, lambda x: x.startswith(' ')):
-                if not k:
-                    fields.append(np.array([[float(x) for x in d.split()] for d in g if len(d.strip())]))
+        # fields = []
+        # layout = 'fieldLocations/romanfields.txt'
+        # from itertools import groupby
+        # with open(layout) as fp:
+        #     for k, g in groupby(fp, lambda x: x.startswith(' ')):
+        #         if not k:
+        #             fields.append(np.array([[float(x) for x in d.split()] for d in g if len(d.strip())]))
 
-        for f in fields:
-            ax.plot(f[:,1],f[:,2],'k-',lw=3)
+        # for f in fields:
+        #     ax.plot(f[:,1],f[:,2],'k-',lw=3)
+
+        sca = pd.read_csv('fieldLocations/gbtds_fields/outline_sca_layout.txt',sep='\s+',header=None)
+        fields = pd.read_csv('fieldLocations/gbtds_fields/overguide_gbtds.centers',sep='\s+')
+
+        for i,f in fields.iterrows():
+            ls='k-'
+            plt.plot(sca.iloc[:,1]+f['l'],sca.iloc[:,2]+f['b'],ls, zorder=15, lw=2)
 
         label_list = [r'1 obs/night ($H$)', r'2 obs/night ($K$)', r'3 obs/night ($K$)', r'\textit{Roman} DRM Fields']
         color_list = ['#F27405','#BF0404','#260101', 'k']
@@ -757,6 +776,7 @@ class cmd:
         for i in range(len(label_list)):
             ax.scatter(1e4,0,label=label_list[i], color=color_list[i], marker='s')
 
+        rect = []
         for i in range(len(l)):
             long, lat = l[i], b[i]
             color = 'k'
@@ -769,8 +789,12 @@ class cmd:
             elif i <= 39 and i >= 32:
                 color = color_list[1]
 
-            ax.add_patch(patches.Rectangle((long,lat),edge_length,edge_length,fill=False, angle=angle, color=color, linewidth=2, alpha=0.8))
+            rect.append(patches.Rectangle((long,lat),edge_length,edge_length,fill=True, angle=angle, color=color, linewidth=2, alpha=0.2))
+            rect.append(patches.Rectangle((long,lat),edge_length,edge_length,fill=False, angle=angle, color=color, linewidth=2, alpha=0.8))
+            # ax.add_patch(patches.Rectangle((long,lat),edge_length,edge_length,fill=False, angle=angle, color=color, linewidth=2, alpha=0.8))
         
+        coll = PatchCollection(rect, match_original=True, zorder=10)
+        ax.add_collection(coll)
         plt.xlim(3,-3)
         plt.ylim(-3,3)
 
@@ -794,6 +818,6 @@ class cmd:
 if __name__ == '__main__':
     rc_dict={'altmag':[12, 15.5], 'delta':[0.1, 1.0], 'altMAD':[-0.1,0.1], 'MAD':[-0.1,0.1]}
     cmd_test = cmd(findvec=True, fieldType='subfield', field_ind=3, rc_dict=rc_dict)
-    print(cmd_test.coeffs[0])
+    
 
-    cmd_test.plotfields(save=True, filepath='paperfigs/ukirt_fields.pdf')
+    cmd_test.plotfields(save=True, filepath='paperfigs/ukirt_overguide_fields.pdf')

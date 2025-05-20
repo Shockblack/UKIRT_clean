@@ -340,7 +340,7 @@ class RedClump():
         old_tau = np.inf
         i = 0
         # Now we'll sample for up to max_n steps
-        for sample in sampler.sample(p0, iterations=self.iterations, progress=True):
+        for sample in sampler.sample(p0, iterations=self.iterations, progress=False):
             # Only check convergence every 200 steps
             if sampler.iteration % 200:
                 continue
@@ -416,8 +416,11 @@ class RedClump():
         EWRGBB = 0.201*EWRC
         M_RGBB = M_RC+0.737
         term3 = EWRGBB/2 * (erf((max_K-M_RGBB)/(np.sqrt(2)*sigma_RC)) - erf((min_K-M_RGBB)/(np.sqrt(2)*sigma_RC)))
+        EWAGBB = 0.028*EWRC
+        M_AGBB = M_RC-1.07
+        term4 = EWAGBB/2 * (erf((max_K-M_AGBB)/(np.sqrt(2)*sigma_RC)) - erf((min_K-M_AGBB)/(np.sqrt(2)*sigma_RC)))
 
-        self.integral = term1 + term2 + term3
+        self.integral = term1 + term2 + term3 + term4
         return self.integral
 
 
@@ -426,14 +429,14 @@ class RedClump():
         self.value_tracker = []
 
         if type(initial_guess) == type(None):
-            initial_guess = np.array([2.,14,0.5])
+            initial_guess = np.array([2.,0.43,14,0.5])
 
 
         params = lmfit.Parameters()
         params.add('EWRC', value=initial_guess[0], min=0.01, max=20.0)
-        params.add('MRC', value=initial_guess[1], min=12., max=18.)
-        params.add('SIGMA', value=initial_guess[2], min=0.01, max=1.)
-        params.add('B', value=0.43, min=0.01, max=1.0)
+        params.add('B', value=initial_guess[1], min=0.01, max=1.0)
+        params.add('MRC', value=initial_guess[2], min=12., max=18.)
+        params.add('SIGMA', value=initial_guess[3], min=0.01, max=1.)
         
         mini = lmfit.Minimizer(self.log_likelihood_nataf_neg, params, fcn_args=(M, ))
         results = mini.minimize(method='nelder')
@@ -566,25 +569,27 @@ class RedClump():
 
         # Add the corner plot
         labels = [r'$EW_{RC}$', r'$K_{RC}$', r'$\sigma_{RC}$', r'$B$']
-        emcee_plot = corner.corner(rc_fitter.samples, show_titles=True, labels=labels, plot_datapoints=True, quantiles=[0.16, 0.5, 0.84], truths=list(res.params.valuesdict().values()), fig=subfigs[1])
+        truth = [res.params['EWRC'].value, res.params['MRC'].value, res.params['SIGMA'].value, res.params['B'].value]
+        emcee_plot = corner.corner(rc_fitter.samples, show_titles=True, labels=labels, plot_datapoints=True, quantiles=[0.16, 0.5, 0.84], truths=truth, fig=subfigs[1])
 
 
         from matplotlib.ticker import FormatStrFormatter
         for i, ax in enumerate(emcee_plot.get_axes()):
-            ax.title.set_fontsize(10)
+            ax.title.set_fontsize(8)
             ax.set_xlabel(ax.get_xlabel(), fontsize=10)
             ax.set_ylabel(ax.get_ylabel(), fontsize=10)
             for label in ax.get_xticklabels() + ax.get_yticklabels():
-                label.set_fontsize(10)
+                label.set_fontsize(8)
             ax.tick_params(pad=1.5)
             ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
             ax.xaxis.set_major_formatter(FormatStrFormatter('%.2f'))
 
-            if i < 6:
+            if i < 12:
                 ax.xaxis.set_ticklabels([])
-            if i % 3 != 0:
+            if i % 4 != 0:
                 ax.yaxis.set_ticklabels([])
                 
+
         if show:
             plt.show()
 
@@ -773,16 +778,24 @@ def determineColor(data,weights,ColorRCinput):
     """
     fitMags = []
     fitHMK = []
+    Kmags = data[:,0] #Currently not being used, pulls K-band magnitude from best fit
+    HMKdiffer = data[:,1] #Pulls the best fit for (H-K) color from CMD
+
+    colorbins = np.linspace(np.percentile(HMKdiffer,15),np.percentile(HMKdiffer,95),100)
+    bin_centers = (colorbins[1:]+colorbins[:-1])/2.
+    colorhist,colorbins = np.histogram(HMKdiffer,colorbins)
+    ColorRCinput = bin_centers[colorhist.argmax()]
+    
     #Testing a min mu value of -0.5 
     MU1min = max(ColorRCinput-2.5,0)
     #MU1min = -0.5 #This is a test to see if its beuno (it's not)
+    
     
     MU1max = ColorRCinput-.01
     MU1step = 0.01
     MU1s = np.arange(MU1min,MU1max,step=MU1step) #Makes a range of values to brute force the color over
     MU2 = ColorRCinput
-    Kmags = data[:,0] #Currently not being used, pulls K-band magnitude from best fit
-    HMKdiffer = data[:,1] #Pulls the best fit for (H-K) color from CMD
+    
     VarianceMin = 1000000
     for MU1 in MU1s:
         
@@ -893,24 +906,39 @@ if __name__ == "__main__":
     tstart = time.time()
     l = 0.5
     b = -0.25
-    # b=-2.0
+    # l=0.261768; b=-0.435071
+    # l=-0.058441;  b=0.155594
+    b=-1.5
     cmd = createCMD.cmd(l=l,b=b, edge_length=pram.arcmin/60.)
     # cmd = createCMD.cmd(263.585168,-29.938195, edge_length=pram.arcmin/60.)
     # cmd = createCMD.cmd(265.685168,-27.238195, edge_length=pram.arcmin/60.)
-    rc_fitter = RedClump(cmd, iterations=100000)
+
+    rc_fitter = RedClump(cmd, iterations=100000, burnin=1000)
     M_dumb, N = rc_fitter.prepare_data_hist(rc_fitter.cmd.fitStarDict['altmag'])
     M = rc_fitter.cmd.fitStarDict['altmag']
 
     res, params = rc_fitter.run_minimizer(M)
 
     init_params = np.array([params['EWRC'], params['MRC'], params['SIGMA'], params['B']])
-
+    print('Initial Guess: ', init_params)
     # ipdb.set_trace()
-    sampler, params, unc = rc_fitter.run_MCMC(M, initial_guess=init_params)
+    sampler, params, unc = rc_fitter.run_MCMC(M)#, initial_guess=init_params)
+    # Get color
+    fit_data = np.array([cmd.fitStarDict['altmag'],cmd.fitStarDict['delta']]).T
+    weights = calcWeights(fit_data, params['A'], params['B'], params['MRC'],params['SIGMA'], params['NRC'])
+    
+    # Running color fit
+    color_fit_vals = determineColor(fit_data,weights,0.45)
     tstop = time.time()
     print('Time taken: ', tstop-tstart)
 
+    # Create a list of the parameters
+    param_list = [round(val,6) for val in params.values()]
+    param_list.append(color_fit_vals[0])
+    param_list.append(color_fit_vals[1])
 
+    print(params)
+    print(param_list)
     rc_fitter.plot_full(show=True)
-
+    # ipdb.set_trace()
     # plt.savefig('paperfigs/fit_with_corner_l'+str(l)+'_b'+str(b)+'.pdf', bbox_inches='tight')

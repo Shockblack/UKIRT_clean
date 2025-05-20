@@ -523,7 +523,7 @@ class mapper:
 
             k+=1
 
-        init_fit_params = np.array([best_fit_params['EWRC'], best_fit_params['B'], best_fit_params['MRC'], best_fit_params['SIGMA']])
+        init_fit_params = np.array([best_fit_params['EWRC'], best_fit_params['MRC'], best_fit_params['SIGMA'], best_fit_params['B']])
 
         # Running mcmc to get the uncertainties
         sampler, best_fit_params, _ = rc.run_MCMC(cmd.fitStarDict['altmag'], init_fit_params)
@@ -545,12 +545,12 @@ class mapper:
         # Print out the progress
         print("Pixel ", i," of ",len(self.pixels)," complete.")
         print("Color fit iterations: ", k)
-        print(f"Nelder-Mead Params:\t[EWRC: {init_fit_params[0]:.4f}, K_RC: {init_fit_params[2]:.4f}, SIGMA: {init_fit_params[3]:.4f}]")
-        print(f"MCMC Params:\t\t[EWRC: {best_fit_params['EWRC']:.4f}, K_RC: {best_fit_params['MRC']:.4f}, SIGMA: {best_fit_params['SIGMA']:.4f}]\n")
+        print(f"Nelder-Mead Params:\t[EWRC: {init_fit_params[0]:.4f}, B: {init_fit_params[3]:.4f}, K_RC: {init_fit_params[1]:.4f}, SIGMA: {init_fit_params[2]:.4f}]")
+        print(f"MCMC Params:\t\t[EWRC: {best_fit_params['EWRC']:.4f}, B: {best_fit_params['B']:.4f}, K_RC: {best_fit_params['MRC']:.4f}, SIGMA: {best_fit_params['SIGMA']:.4f}]\n")
 
         return pixel_info
 
-    def fit_map(self, pool=None):
+    def fit_map(self):
 
         # Getting the guesses from the initial fit file
         # Array needs to be reversed since it was generated in reverse order (sorry)
@@ -578,7 +578,7 @@ class mapper:
 
             i += 1
 
-            init_fit_params = [init_EWRC, init_M, init_sigma]
+            init_fit_params = [init_EWRC, init_B, init_M, init_sigma]
 
             # Get the color magnitude diagram for the pixel
             # The color-mag cuts are done initially already on this call
@@ -593,7 +593,7 @@ class mapper:
 
             # Run initial magnitude fit
             
-            rc = RC_fitter.RedClump(cmd, iterations=100000, pool=pool)
+            rc = RC_fitter.RedClump(cmd, iterations=100000)
             
             sampler, best_fit_params = rc.run_minimizer(cmd.fitStarDict['altmag'], init_fit_params)
 
@@ -613,10 +613,11 @@ class mapper:
                 except:
                     init_EWRC = 1.0
                 init_M = best_fit_params['MRC']
+                init_B = best_fit_params['B']
                 init_sigma = best_fit_params['SIGMA']
                 init_color = color_fit_vals[0]
 
-                init_fit_params = [init_EWRC, init_M, init_sigma]
+                init_fit_params = [init_EWRC, init_B, init_M, init_sigma]
 
                 # Change the RC limits
                 cm_dict = {'altmag': [init_M-2., init_M+1.5], 'delta': [-1,5]}
@@ -640,10 +641,11 @@ class mapper:
                 # if k == 5:
                     # ipdb.set_trace()
             
-            init_fit_params = np.array([best_fit_params['EWRC'], best_fit_params['B'], best_fit_params['MRC'], best_fit_params['SIGMA']])
+            # Ignore why the B is last, I scrapped it together and I was being lazy im so sorry
+            init_fit_params = np.array([best_fit_params['EWRC'], best_fit_params['MRC'], best_fit_params['SIGMA'], best_fit_params['B']])
             # Running mcmc to get the uncertainties
             print("Initial guess: ", init_fit_params)
-            sampler, best_fit_params, _ = rc.run_MCMC(cmd.fitStarDict['altmag'], init_fit_params)
+            # sampler, best_fit_params, _ = rc.run_MCMC(cmd.fitStarDict['altmag'], init_fit_params)
 
             # Set to True if you want to plot the fits
             if False:
@@ -672,8 +674,8 @@ class mapper:
             
             # Print out the progress
             print("Pixel ",i-1," of ",len(self.pixels)," complete.")
-            print(f"Nelder-Mead Params:\t[EWRC: {init_fit_params[0]:.4f}, K_RC: {init_fit_params[1]:.4f}, SIGMA: {init_fit_params[2]:.4f}]")
-            print(f"MCMC Params:\t\t[EWRC: {best_fit_params['EWRC']:.4f}, K_RC: {best_fit_params['MRC']:.4f}, SIGMA: {best_fit_params['SIGMA']:.4f}]\n")
+            print(f"Nelder-Mead Params:\t[EWRC: {init_fit_params[0]:.4f}, B: {init_fit_params[3]:.4f}, K_RC: {init_fit_params[1]:.4f}, SIGMA: {init_fit_params[2]:.4f}]")
+            print(f"MCMC Params:\t\t[EWRC: {best_fit_params['EWRC']:.4f}, B: {best_fit_params['B']:.4f}, K_RC: {best_fit_params['MRC']:.4f}, SIGMA: {best_fit_params['SIGMA']:.4f}]\n")
             
             # If you need to debug the CMD, uncomment these two lines. 
             # It will plot the CMD for the given pixel and fit, very useful.
@@ -737,11 +739,11 @@ if __name__ == "__main__":
     print("Filtering Grid")
     ext_map.filter_grid()
     print("Beginning Fit\n")
-    ext_map.fit_map()
+    # ext_map.fit_map()
     from multiprocessing import cpu_count
     # num_cores = cpu_count()
-    # ext_map.fit_parallel(2)
-    filename = 'paperdata/mcmc_map_full'
+    ext_map.fit_parallel(4)
+    filename = 'maps/mcmc_map_final'
     ext_map.saveMap(filename = filename)
 
 
