@@ -360,17 +360,21 @@ class RedClump():
             if converged:
                 break
             old_tau = tau
-            best_ind = np.argmax(sampler.flatlnprobability)
+            # best_ind = np.argmax(sampler.flatlnprobability)
             samples = sampler.flatchain
-            best_params = samples[best_ind]
+            # best_params = samples[best_ind]
+
+            # Use 50th percentile as best_param
+            best_params = np.percentile(samples, 50, axis=0)
             
         # Run the production
         # pos, prob, state =  sampler.run_mcmc(p0, self.iterations, progress=True)
 
-        # Get the best fit parameters
-        best_ind = np.argmax(sampler.flatlnprobability)
+        # Get the reported parameters
+        # best_ind = np.argmax(sampler.flatlnprobability)
         samples = sampler.flatchain
-        best_params = samples[best_ind]
+        # best_params = samples[best_ind]
+        best_params = np.percentile(samples, 50, axis=0)
         B = best_params[3]
         # Calculate the statistical uncertainties
         perc = np.percentile(samples, [16, 50, 84], axis=0)
@@ -389,13 +393,13 @@ class RedClump():
         self.A = A
         self.A_mc = A
         # Propogating the error
-        # A_err = A*np.sqrt( (np.sqrt(self.N_obs)/self.N_obs)**2 + (I[1]/I[0])**2 )
+        # A_err = A*np.sqrt( (np.sqrt(self.N_obs)/self.N_obs)**2 + (self.I[1]/self.I[0])**2 )
         N_RC = A*best_params[0]
         # N_RC_err = N_RC*np.sqrt((A_err/A)**2 + (unc[0]/best_params[0])**2)
         A_err = 0.
         N_RC_err = 0.
 
-        params =    {'A':A, 'A_err':A_err, 'B':B, 'MRC':best_params[1], 'MRC_err':unc[1], \
+        params =    {'A':A, 'A_err':A_err, 'B':B, 'B_err':unc[3], 'MRC':best_params[1], 'MRC_err':unc[1], \
                     'SIGMA':best_params[2], 'SIGMA_err':unc[2], 'NRC':N_RC, 'NRC_err':N_RC_err, 'EWRC':best_params[0], 'EWRC_err':unc[0]}
 
         self.mcmc_params = {'EWRC':best_params[0], 'B':B, 'MRC':best_params[1], 'SIGMA':best_params[2]}
@@ -443,8 +447,8 @@ class RedClump():
         self.results = results
         del mini
 
-        best_params = [results.params['EWRC'].value, results.params['MRC'].value, results.params['SIGMA'].value]
-        B = results.params['B'].value
+        best_params = [results.params['EWRC'].value, results.params['B'].value, results.params['MRC'].value, results.params['SIGMA'].value]
+
         # Calculating the best integral
         # Preparing the scipy integrator in C
         # c_vals = (ctypes.c_double * len(best_params))(*best_params)
@@ -454,7 +458,7 @@ class RedClump():
         # I = integrate.quad(func, self.cmd.cm_dict['altmag'][0], self.cmd.cm_dict['altmag'][1])
 
         # A = self.N_obs/I[0]
-        I = self.integrator(best_params[0], B, best_params[1], best_params[2])
+        I = self.integrator(best_params[0], best_params[1], best_params[2], best_params[3])
         self.A = self.N_obs/I
         N_RC = self.A*best_params[0]
         
@@ -462,7 +466,7 @@ class RedClump():
         self.A_nm = self.N_obs/I
         self.N_RC_nm = N_RC
 
-        best_fit_params =    {'A':self.A, 'B':B, 'MRC':best_params[1], 'SIGMA':best_params[2], 'NRC':N_RC, 'EWRC':best_params[0]}
+        best_fit_params =    {'A':self.A, 'B':best_params[1], 'MRC':best_params[2], 'SIGMA':best_params[3], 'NRC':N_RC, 'EWRC':best_params[0]}
 
         self.best_fit_params = best_fit_params
 
@@ -908,7 +912,8 @@ if __name__ == "__main__":
     b = -0.25
     # l=0.261768; b=-0.435071
     # l=-0.058441;  b=0.155594
-    b=-1.5
+    l=0.248301;b=-0.477267	
+    # b=-1.5
     cmd = createCMD.cmd(l=l,b=b, edge_length=pram.arcmin/60.)
     # cmd = createCMD.cmd(263.585168,-29.938195, edge_length=pram.arcmin/60.)
     # cmd = createCMD.cmd(265.685168,-27.238195, edge_length=pram.arcmin/60.)
@@ -922,7 +927,7 @@ if __name__ == "__main__":
     init_params = np.array([params['EWRC'], params['MRC'], params['SIGMA'], params['B']])
     print('Initial Guess: ', init_params)
     # ipdb.set_trace()
-    sampler, params, unc = rc_fitter.run_MCMC(M)#, initial_guess=init_params)
+    sampler, params, unc = rc_fitter.run_MCMC(M, initial_guess=init_params)
     # Get color
     fit_data = np.array([cmd.fitStarDict['altmag'],cmd.fitStarDict['delta']]).T
     weights = calcWeights(fit_data, params['A'], params['B'], params['MRC'],params['SIGMA'], params['NRC'])
