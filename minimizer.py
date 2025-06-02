@@ -379,7 +379,7 @@ class RedClump():
         # Calculate the statistical uncertainties
         perc = np.percentile(samples, [16, 50, 84], axis=0)
         unc = np.diff(perc, axis=0).T
-        unc = np.sqrt(unc[:,0]**2 + unc[:,1]**2)
+        # unc = np.sqrt(unc[:,0]**2 + unc[:,1]**2) # This is a bad idea, just reporting 16 and 84 now
 
         # Calculating the best integral
         # Preparing the scipy integrator in C
@@ -389,18 +389,28 @@ class RedClump():
 
         # I = integrate.quad(func, self.cmd.cm_dict['altmag'][0], self.cmd.cm_dict['altmag'][1])
         self.I = self.integrator(best_params[0], B, best_params[1], best_params[2])
+        I_up = self.integrator(best_params[0]+unc[0][1], B+unc[3][1], best_params[1]-unc[1][0], best_params[2]-unc[2][0])
+        I_low = self.integrator(best_params[0]-unc[0][0], B-unc[3][0], best_params[1]+unc[1][1], best_params[2]+unc[2][1])
         A = self.N_obs/self.I#I[0]
+        A_low = self.N_obs/I_up
+        A_up = self.N_obs/I_low
         self.A = A
         self.A_mc = A
         # Propogating the error
         # A_err = A*np.sqrt( (np.sqrt(self.N_obs)/self.N_obs)**2 + (self.I[1]/self.I[0])**2 )
         N_RC = A*best_params[0]
+        N_RC_up = A_up*best_params[0]
+        N_RC_low = A_low*best_params[0]
         # N_RC_err = N_RC*np.sqrt((A_err/A)**2 + (unc[0]/best_params[0])**2)
-        A_err = 0.
-        N_RC_err = 0.
-
-        params =    {'A':A, 'A_err':A_err, 'B':B, 'B_err':unc[3], 'MRC':best_params[1], 'MRC_err':unc[1], \
-                    'SIGMA':best_params[2], 'SIGMA_err':unc[2], 'NRC':N_RC, 'NRC_err':N_RC_err, 'EWRC':best_params[0], 'EWRC_err':unc[0]}
+        # A_err = 0.
+        # N_RC_err = 0.
+        params = {'A': A, 'A_err_low': A-A_low, 'A_err_up': A_up-A, 'B':best_params[3], 'B_err_low':unc[3][0], 'B_err_up':unc[3][1], \
+                    'MRC':best_params[1], 'MRC_err_low':unc[1][0], 'MRC_err_up':unc[1][1], \
+                    'SIGMA':best_params[2], 'SIGMA_err_low':unc[2][0], 'SIGMA_err_up':unc[2][1], \
+                    'NRC':N_RC, 'NRC_err_low':N_RC-N_RC_low, 'NRC_err_up':N_RC_up-N_RC, \
+                    'EWRC':best_params[0], 'EWRC_err_low':unc[0][0], 'EWRC_err_up':unc[0][1]}
+        # params =    {'A':A, 'A_err':A_err, 'B':B, 'B_err':unc[3], 'MRC':best_params[1], 'MRC_err':unc[1], \
+                    # 'SIGMA':best_params[2], 'SIGMA_err':unc[2], 'NRC':N_RC, 'NRC_err':N_RC_err, 'EWRC':best_params[0], 'EWRC_err':unc[0]}
 
         self.mcmc_params = {'EWRC':best_params[0], 'B':B, 'MRC':best_params[1], 'SIGMA':best_params[2]}
         self.samples = sampler.flatchain
@@ -495,16 +505,16 @@ class RedClump():
 
         model_list = []
 
-        # Loop over samples and calculate models
-        for theta in self.samples:
-            model_list.append(self.model_lmfit(theta, xval))
+        # # Loop over samples and calculate models
+        # for theta in self.samples:
+        #     model_list.append(self.model_lmfit(theta, xval))
 
-        # Get the quantiles for the model
-        quantiles = np.percentile(model_list, [2.5, 16, 50, 84, 97.5], axis=0)
+        # # Get the quantiles for the model
+        # quantiles = np.percentile(model_list, [2.5, 16, 50, 84, 97.5], axis=0)
         
-        # Plot the quantiles using fill_between
-        ax.fill_between(xval, quantiles[0]*x_range/len(M_dumb), quantiles[4]*x_range/len(M_dumb), color=pram.red, alpha=0.2)
-        ax.fill_between(xval, quantiles[1]*x_range/len(M_dumb), quantiles[3]*x_range/len(M_dumb), color=pram.red, alpha=0.5)
+        # # Plot the quantiles using fill_between
+        # ax.fill_between(xval, quantiles[0]*x_range/len(M_dumb), quantiles[4]*x_range/len(M_dumb), color=pram.red, alpha=0.2)
+        # ax.fill_between(xval, quantiles[1]*x_range/len(M_dumb), quantiles[3]*x_range/len(M_dumb), color=pram.red, alpha=0.5)
 
         # ax.plot(xval, quantiles[2]*x_range/len(M_dumb), color="r", lw=2, alpha=0.8, label='MCMC')
         ax.plot(xval, best_model*x_range/len(M_dumb), color='r', lw=4, alpha=1.0, label='MCMC')
@@ -912,7 +922,6 @@ if __name__ == "__main__":
     b = -0.25
     # l=0.261768; b=-0.435071
     # l=-0.058441;  b=0.155594
-    l=0.248301;b=-0.477267	
     # b=-1.5
     cmd = createCMD.cmd(l=l,b=b, edge_length=pram.arcmin/60.)
     # cmd = createCMD.cmd(263.585168,-29.938195, edge_length=pram.arcmin/60.)
@@ -936,11 +945,14 @@ if __name__ == "__main__":
     color_fit_vals = determineColor(fit_data,weights,0.45)
     tstop = time.time()
     print('Time taken: ', tstop-tstart)
-
+    import ipdb; ipdb.set_trace()
     # Create a list of the parameters
     param_list = [round(val,6) for val in params.values()]
     param_list.append(color_fit_vals[0])
     param_list.append(color_fit_vals[1])
+    # Create string list of the parameters in :.6f format with comma separated
+    param_list = [f'{val:.6f}' for val in param_list]
+    param_list = ','.join(param_list)
 
     print(params)
     print(param_list)

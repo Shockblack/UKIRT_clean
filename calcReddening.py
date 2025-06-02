@@ -470,7 +470,7 @@ class mapper:
 
 
         init_fit_params = [init_EWRC, init_B, init_M, init_sigma]
-
+        init_fit_params = np.array([2.,0.43,14,0.5])
 
         # Get the color magnitude diagram for the pixel
         # The color-mag cuts are done initially already on this call
@@ -481,7 +481,7 @@ class mapper:
         fit_data = np.array([cmd.fitStarDict['altmag'],cmd.fitStarDict['delta']]).T
 
         # Run initial magnitude fit
-        rc = RC_fitter.RedClump(cmd, iterations=100000)
+        rc = RC_fitter.RedClump(cmd, iterations=100000, burnin=1000)
         
         sampler, best_fit_params = rc.run_minimizer(cmd.fitStarDict['altmag'], init_fit_params)
         weights = RC_fitter.calcWeights(fit_data, best_fit_params['A'], best_fit_params['B'], best_fit_params['MRC'], best_fit_params['SIGMA'], best_fit_params['NRC'])
@@ -593,7 +593,7 @@ class mapper:
 
             # Run initial magnitude fit
             
-            rc = RC_fitter.RedClump(cmd, iterations=100000)
+            rc = RC_fitter.RedClump(cmd, iterations=100000, burnin=1000)
             
             sampler, best_fit_params = rc.run_minimizer(cmd.fitStarDict['altmag'], init_fit_params)
 
@@ -742,8 +742,8 @@ if __name__ == "__main__":
     # ext_map.fit_map()
     from multiprocessing import cpu_count
     # num_cores = cpu_count()
-    ext_map.fit_parallel(4)
-    filename = 'maps/mcmc_map_final'
+    ext_map.fit_parallel(32)
+    filename = 'maps/mcmc_map_illum'
     ext_map.saveMap(filename = filename)
 
 

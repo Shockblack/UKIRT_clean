@@ -33,6 +33,7 @@ from astropy import units as u
 import numpy as np
 import parameters as pram
 import pandas as pd
+from scipy.interpolate import LinearNDInterpolator
 
 class cmd:
     def __init__(self, ra=None, dec=None, l=None, b=None, year = pram.year, edge_length=0.25, findvec = False, fieldType = 'field', field_ind=0, rc_dict={}, cm_dict=None):
@@ -297,6 +298,104 @@ class cmd:
 
         return fieldRange
 
+    def correct_illumination(self, star_dict, field_ind):
+
+        ra, dec = star_dict['RA'], star_dict['Dec']
+        # import ipdb; ipdb.set_trace()
+        ccd = int(star_dict['name'][0].split('_')[3])
+
+        illumination_K_file_may = pd.read_csv('fieldLocations/fieldCorrections/illum_17a_may_K.table.txt', \
+                                        sep=r'\s+', names = ['Xi', 'Xn', 'delMag', 'NoInBin'], skiprows=1)
+        illumination_H_file_may = pd.read_csv('fieldLocations/fieldCorrections/illum_17a_may_H.table.txt', \
+                                        sep=r'\s+', names = ['Xi', 'Xn', 'delMag', 'NoInBin'], skiprows=1)
+        illumination_K_file_jul = pd.read_csv('fieldLocations/fieldCorrections/illum_17a_jul_K.table.txt', \
+                                        sep=r'\s+', names = ['Xi', 'Xn', 'delMag', 'NoInBin'], skiprows=1)
+        illumination_H_file_jul = pd.read_csv('fieldLocations/fieldCorrections/illum_17a_jul_H.table.txt', \
+                                        sep=r'\s+', names = ['Xi', 'Xn', 'delMag', 'NoInBin'], skiprows=1)
+        
+        # Average the two months for illumination corrections during the 2017 survey
+        illumination_K_file = illumination_K_file_jul
+        illumination_H_file = illumination_H_file_jul
+        illumination_H_file['delMag'] = (illumination_H_file_may['delMag'] + illumination_H_file_jul['delMag']) / 2
+        illumination_K_file['delMag'] = (illumination_K_file_may['delMag'] + illumination_K_file_jul['delMag']) / 2
+
+        # Remove 0 star bins
+        illumination_K_file = illumination_K_file[illumination_K_file['NoInBin'] != 0]
+        illumination_H_file = illumination_H_file[illumination_H_file['NoInBin'] != 0]
+        
+
+        
+        if ccd == 1:
+            illumination_K_file = illumination_K_file[(illumination_K_file['Xi'] <= -0.1) & (illumination_K_file['Xn'] <= -0.1)]
+            illumination_H_file = illumination_H_file[(illumination_H_file['Xi'] <= -0.1) & (illumination_H_file['Xn'] <= -0.1)]
+        elif ccd == 2:
+            illumination_K_file = illumination_K_file[(illumination_K_file['Xi'] >= 0.1) & (illumination_K_file['Xn'] <= -0.1)]
+            illumination_H_file = illumination_H_file[(illumination_H_file['Xi'] >= 0.1) & (illumination_H_file['Xn'] <= -0.1)]
+        elif ccd == 3:
+            illumination_K_file = illumination_K_file[(illumination_K_file['Xi'] >= 0.1) & (illumination_K_file['Xn'] >= 0.1)]
+            illumination_H_file = illumination_H_file[(illumination_H_file['Xi'] >= 0.1) & (illumination_H_file['Xn'] >= 0.1)]
+        elif ccd == 4:
+            illumination_K_file = illumination_K_file[(illumination_K_file['Xi'] <= -0.1) & (illumination_K_file['Xn'] >= 0.1)]
+            illumination_H_file = illumination_H_file[(illumination_H_file['Xi'] <= -0.1) & (illumination_H_file['Xn'] >= 0.1)]
+        else:
+            raise Exception('Invalid CCD number. Must be 1, 2, 3, or 4.')
+        
+
+        illumination_K_file = illumination_K_file.sort_values(by=['Xi', 'Xn'], ascending=True)
+        illumination_H_file = illumination_H_file.sort_values(by=['Xi', 'Xn'], ascending=True)
+
+        # Create interpolators for K and H band illumination corrections
+        ra_center = (self.fieldData[field_ind]['RAmin'] + self.fieldData[field_ind]['RAmax']) / 2
+        dec_center = (self.fieldData[field_ind]['DECmin'] + self.fieldData[field_ind]['DECmax']) / 2
+        
+        Xi_mean = round(illumination_K_file['Xi'].mean(), 4)
+        Xn_mean = round(illumination_K_file['Xn'].mean(), 4)
+
+        # +0.22 centers the CCD
+        K_interp = LinearNDInterpolator(
+                        (illumination_K_file['Xi']+ra_center-Xi_mean, illumination_K_file['Xn']+dec_center-Xn_mean),
+                        illumination_K_file['delMag'],
+                        fill_value=0.0
+                        )   
+        H_interp = LinearNDInterpolator(
+                        (illumination_H_file['Xi']+ra_center-Xi_mean, illumination_H_file['Xn']+dec_center-Xn_mean),
+                        illumination_H_file['delMag'],
+                        fill_value=0.0
+                        )
+
+        # Calculate the illumination correction for each star
+        delta_K = K_interp(ra, dec)
+        delta_H = H_interp(ra, dec)
+
+        # Apply the corrections to the star dictionary
+        star_dict['mag'] += delta_H
+        star_dict['altmag'] += delta_K
+        star_dict['delta'] = star_dict['delta'] + delta_H - delta_K
+
+        return star_dict
+
+    def check_altband(self, data_dict):
+
+        if 'delta' not in data_dict.keys():
+                    data_dict['delta'] = data_dict['mag'] - data_dict['altmag']
+
+        # Want H-band to be the primary band
+        # so if '_K_' is in the name, we switch the keys
+        if '_K_' in data_dict['name'][0]:
+            tempdict = {}
+            for key in data_dict.keys():
+                if key == 'delta': # Color is flipped
+                    tempdict[key] = -data_dict[key]
+                elif key == 'error' or key == 'offset':
+                    tempdict[key]=data_dict[key]
+                elif 'alt' not in key:
+                    tempdict['alt'+key]=data_dict[key]
+                else:
+                    tempdict[key[3:]]=data_dict[key]
+
+            return tempdict
+        else:
+            return data_dict
 
     def findFields(self,new_ra=None,new_dec=None,plot_fields=True):
         """Gives the indexes of fields from the fieldData list of UKIRT fields for which
@@ -393,53 +492,14 @@ class cmd:
             # Loops over each field found to contain stars in the ra and dec range
             # given by the findfields() function. Stored in self.raw_field_inds
             for i in self.raw_field_inds:
+                temp_dict = np.load('../data/ukirt/2017/psfpickles/altBandCrossCheck_'+pram.phot+self.fieldData[i]['year'] \
+                    +'_'+self.fieldData[i]['field']+'_'+self.fieldData[i]['ccd']+'.npy',allow_pickle=True).item()
+                
+                temp_dict = self.check_altband(temp_dict)
 
+                temp_dict = self.correct_illumination(temp_dict, i)
                 # Appending the dictionary list with all the stellar data
-                dict_list.append(np.load('../data/ukirt/2017/psfpickles/altBandCrossCheck_'+pram.phot+self.fieldData[i]['year'] \
-                    +'_'+self.fieldData[i]['field']+'_'+self.fieldData[i]['ccd']+'.npy',allow_pickle=True).item())
-
-                # Below is a check to make sure out primary band is always the H-band and that the secondary is K.
-                # That is, we want to check if 'mag' is H and if 'altmag' is K.
-
-            for i in range(len(dict_list)):
-                # Creating a dictionary of the given iteration used to compare against
-                tdict = dict_list[i]
-
-                # Checking if the 'delta' key is not present and adding it in if that's the case.
-                if 'delta' not in tdict.keys():
-                    tdict['delta'] = tdict['mag'] - tdict['altmag']
-                
-
-                # If the name of the first entry has _K_, then K is the primary band.
-                # We want to switch these if that is the case so that H is primary.
-                if '_K_' in tdict[list(tdict.keys())[0]][0]:
-
-                    # Creates a temporary dictionary for restructuring
-                    tempdict = {}
-
-                    for key in tdict.keys():
-
-                        # If K is primary band, then delta (K-H) is the negative of the delta (H-K) which we want.
-                        if key == 'delta':
-                            tempdict[key] = -tdict[key]
-
-                        # These are fine as is, so just copy over.
-                        elif key == 'error' or key == 'offset':
-                            tempdict[key]=tdict[key]
-
-                        # If the prefix "alt" is not in the key then it corresponds to the K band.
-                        # We want to flip this so that K IS the alt band by adding "alt" before each key.
-                        elif 'alt' not in key:
-                            tempdict['alt'+key]=tdict[key]
-
-                        # This means that everything left is 'alt'+key, which here corresponds to the H-band values.
-                        # We want this to be just key, without the 'alt.' To do this we grab all the remaining keys
-                        # and splice the string name so that the first 3 letters 'alt' get removed.
-                        else:
-                            tempdict[key[3:]]=tdict[key]
-                
-                        # Set the temporary dictionary dict as the entry
-                        dict_list[i]=tempdict
+                dict_list.append(temp_dict)
 
             # Here the dictionary lists are restructured. Instead of being a list of dictionaries,
             # this will turn it into a dictionary of lists. This line below creates the "framework"
@@ -763,8 +823,8 @@ class cmd:
         # for f in fields:
         #     ax.plot(f[:,1],f[:,2],'k-',lw=3)
 
-        sca = pd.read_csv('fieldLocations/gbtds_fields/outline_sca_layout.txt',sep='\s+',header=None)
-        fields = pd.read_csv('fieldLocations/gbtds_fields/overguide_gbtds.centers',sep='\s+')
+        sca = pd.read_csv('fieldLocations/gbtds_fields/outline_sca_layout.txt',sep=r'\s+',header=None)
+        fields = pd.read_csv('fieldLocations/gbtds_fields/overguide_gbtds.centers',sep=r'\s+')
 
         for i,f in fields.iterrows():
             ls='k-'
