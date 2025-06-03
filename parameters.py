@@ -25,3 +25,13 @@ projpath = '/mnt/a/documents/files/surp/ukirt-exinction-maps'
 brown = '#260101'
 red = '#BF0404'
 orange = '#F27405'
+
+map_header = ['ra', 'dec', 'l', 'b', 'A', 'A_err_low', 'A_err_up', 'B', 'B_err_low', 'B_err_up', \
+                'MRC', 'MRC_err_low', 'MRC_err_up', \
+                'SIGMA', 'SIGMA_err_low', 'SIGMA_err_up', \
+                'NRC', 'NRC_err_low', 'NRC_err_up', \
+                'EWRC', 'EWRC_err_low', 'EWRC_err_up', \
+                'HK', 'sigmaHK'
+            ]
+
+ext_header = ['l', 'b', 'AK', 'AK_err_low', 'AK_err_up', 'EHK', 'EHK_err']
